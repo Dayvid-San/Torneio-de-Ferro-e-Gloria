@@ -1,1 +1,1 @@
-# -O-Torneio-de-Ferro-e-Gl-ria
+# -O-Torneio-de-Ferro-e-Glória
