@@ -16,12 +16,14 @@ class Boss(Personagem):
     def escolher_acao(self, jogador_alvo):
         self.atacar(jogador_alvo)
 
-
     # Metodos do Polimorfismo
     # Mudar Ataque e Defesa conforme o nivel do Boss (1 a 5)
     # No caso dos metodos polimorfos dos herois será pelo tipo de heroi (Ataque do Mago, do Cavaleiro, do Assassino)
     def RealizarAtaque(self, nivel):
-        pass
+        if nivel == 1: # Exemplo
+            pass
+        else:
+            pass
 
     def ReceberDano(self, nivel):
         pass
