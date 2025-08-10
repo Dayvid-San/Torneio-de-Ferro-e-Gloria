@@ -1,6 +1,6 @@
 from batalha import Batalha
 from boss import Boss
-from jogador import Mago,Tanque,Assassino
+from jogador import Mago, Cavaleiro, Assassino
 
 class Jogo:
     def __init__(self):
@@ -17,8 +17,8 @@ class Jogo:
     def criar_jogador(self, nome, classe):
         if classe == "Mago":
             self.jogador = Mago(nome)
-        elif classe == "Tanque":
-            self.jogador = Tanque(nome)
+        elif classe == " Cavaleiro":
+            self.jogador =  Cavaleiro(nome)
         elif classe == "Assassino":
             self.jogador = Assassino(nome)
         print(f"Jogador {self.jogador.nome} da classe {classe} criado!")

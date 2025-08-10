@@ -38,7 +38,7 @@ class Mago(Jogador):
     def __init__(self, nome: str):
         super().__init__(nome, vida_max=70, ataque=15, defesa=5)
 
-class Tanque(Jogador):
+class Cavaleiro(Jogador):
     def __init__(self, nome: str):
         super().__init__(nome, vida_max=120, ataque=8, defesa=12)
 
