@@ -60,6 +60,8 @@ class Cavaleiro(Jogador):
     def ReceberDano(self): # Metodo Personalizado da Classe Cavaleiro
         pass
 
+# ===================================================================
+
 class Assassino(Jogador):
     def __init__(self, nome: str):
         # Assassino: balanceado, com foco em ataque
