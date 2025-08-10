@@ -1,27 +1,50 @@
+# Criação da SUPER CLASSE (Classe Pai) para construção dos personagens (Heróis e Vilões) - CONCEITO: HERANÇA -
+# Metodos Gerais -> GETS E SETS - CONCEITO: HERANÇA -
+# Metodos Exclusivos dos Personagens: - PORLIFORFISMO - 
+# Atributos dos personagens Privados: - Encapsulamento -
+
 class Personagem:
-    def __init__(self, nome: str, vida_max: int, ataque: int, defesa: int):
-        self.nome = nome
-        self.vida_max = vida_max
-        self.vida_atual = vida_max
-        self.ataque = ataque
-        self.defesa = defesa
+    def __init__(self, nome: str, vida_max: int):
+        self.__nome = nome
+        self.__vida_max = vida_max
+        self.__vida_atual = vida_max
 
-    def esta_vivo(self) -> bool:
-        return self.vida_atual > 0
+    # METODOS GET E SET
 
-    def atacar(self, alvo:'Personagem') -> str:
-        dano = self.ataque - alvo.defesa
-        if dano < 0:
-            dano = 0
+    def getNome(self):
+        return self.__nome
+    
+    def setNome(self, NovoNome):
+        self.__nome = NovoNome
+        return self.__nome
+    
+    def getVidaAtual(self):
+        return self.__vida_atual
+    
+    def sefVidaAtual(self, NovaVidaAtual):
+        self.__vida_atual = NovaVidaAtual
+        return self.__vida_atual
+    
+    def getVidaMax(self):
+        return self.__vida_max
+    
+    def setVidaMax(self, NovaVidaMax):
+        self.__vida_max = NovaVidaMax
+        return self.__vida_max
+
+    # METODOS DE AÇÕES:
+
+    # Retorna um bool representando a condição do personagem
+    def EstaVido(self) -> bool:
+        return self.__vida_atual > 0
+
+    # Metodo de Ataque
+    def RealizarAtaque(self):
+        pass
+
+    # Metodo de Dano
+    def ReceberDano(self):
+        pass
         
-        alvo.receber_dano(dano)
-        print(f"{self.nome} atacou {alvo.nome} e causou {dano} de dano!")
-        return f"{self.nome} atacou {alvo.nome} e causou {dano} de dano!"
-
-    def receber_dano(self, dano: int):
-        self.vida_atual -= dano
-        if self.vida_atual < 0:
-            self.vida_atual = 0
-            
     def __str__(self):
-        return f"{self.nome} (Vida: {self.vida_atual}/{self.vida_max})"
+        return f"{self.__nome} (Vida: {self.__vida_atual})"
