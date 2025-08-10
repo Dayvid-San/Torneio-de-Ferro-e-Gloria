@@ -1,8 +1,8 @@
 from personagem import Personagem
 
 class Jogador(Personagem):
-    def __init__(self, nome: str, vida_max: int, ataque: int, defesa: int):
-        super().__init__(nome, vida_max, ataque, defesa)
+    def __init__(self, nome: str, vida_max: int):
+        super().__init__(nome, vida_max)
         self.pontos = 0
         self.acoes_defesa = 1 
         self.acoes_cura = 1   
@@ -38,11 +38,37 @@ class Mago(Jogador):
     def __init__(self, nome: str):
         super().__init__(nome, vida_max=70, ataque=15, defesa=5)
 
+    # Metodo de Ataque 
+    def RealizarAtaque(self): # Metodo Personalizado da Classe Mago
+        pass
+
+    # Metodo de Dano
+    def ReceberDano(self): # Metodo Personalizado da Classe Mago
+        pass
+
+# ===================================================================
+
 class Cavaleiro(Jogador):
     def __init__(self, nome: str):
         super().__init__(nome, vida_max=120, ataque=8, defesa=12)
 
+        # Metodo de Ataque 
+    def RealizarAtaque(self): # Metodo Personalizado da Classe Cavaleiro
+        pass
+
+    # Metodo de Dano 
+    def ReceberDano(self): # Metodo Personalizado da Classe Cavaleiro
+        pass
+
 class Assassino(Jogador):
     def __init__(self, nome: str):
         # Assassino: balanceado, com foco em ataque
-        super().__init__(nome, vida_max=85, ataque=12, defesa=8)        
+        super().__init__(nome, vida_max=85, ataque=12, defesa=8)
+
+    # Metodo de Ataque 
+    def RealizarAtaque(self): # Metodo Personalizado da Classe Assassino
+        pass
+
+    # Metodo de Dano
+    def ReceberDano(self): # Metodo Personalizado da Classe Assassino
+        pass  
