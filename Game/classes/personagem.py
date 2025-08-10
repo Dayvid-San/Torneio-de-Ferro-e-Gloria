@@ -38,7 +38,7 @@ class Personagem:
     def EstaVido(self) -> bool:
         return self.__vida_atual > 0
 
-    # Metodo de Ataque
+    # Metodo de Ataque 
     def RealizarAtaque(self):
         pass
 

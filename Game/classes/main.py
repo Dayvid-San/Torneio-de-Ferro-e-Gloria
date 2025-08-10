@@ -8,9 +8,9 @@ from jogador import Jogador
 # criada na main para fazer o progama rodar, ou se é melhor apenas importa-la.
 
 Argumentos = 'Preencher os argumentos das classes adequadamente'
-# Caso for criar os viloes na main conforme as auals de POO, senão será por importação da lista "self.bosses"
-# Temos que conversar sobre a criação dos personagens e viloes, se será no Progama Principal (Main) como nas
-# aulas de POO ou realizar de outra forma como já vem sendo feito (Criação nas classes)
+# Caso for criar os viloes na main conforme as aulas de POO, senão será por importação da lista "self.bosses" de uma
+# das classes. Temos que conversar sobre a criação dos personagens e viloes (padronizar), se será no Progama Principal (Main)
+#  como nas aulas de POO ou realizar de outra forma como já vem sendo feito (Criação nas classes).
 
 bossnivel1 = Boss(Argumentos)
 bossnivel2 = Boss(Argumentos)

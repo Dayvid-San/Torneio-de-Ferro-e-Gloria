@@ -34,6 +34,8 @@ class Jogador(Personagem):
         return f"Nome: {self.nome}\nVida: {self.vida_atual}/{self.vida_max}\nAtaque: {self.ataque}\nDefesa: {self.defesa}\nPontos: {self.pontos}"
 
 
+# ===================================================================
+
 class Mago(Jogador):
     def __init__(self, nome: str):
         super().__init__(nome, vida_max=70, ataque=15, defesa=5)
