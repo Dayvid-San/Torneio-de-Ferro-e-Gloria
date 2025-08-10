@@ -6,9 +6,9 @@ class Jogo:
     def __init__(self):
         self.jogador = None
         self.bosses = [
-            Boss("Goblin Rei", vida_max=100, ataque=10, defesa=5),
-            Boss("Golem de Pedra", vida_max=150, ataque=8, defesa=15),
-            Boss("Dragão Vermelho", vida_max=250, ataque=18, defesa=12)
+            Boss("Goblin Rei", vida_max=100, ataque=10, defesa=5, nivel = 1),
+            Boss("Golem de Pedra", vida_max=150, ataque= 6, defesa=15, nivel = 2),
+            Boss("Dragão Vermelho", vida_max=200, ataque=18, defesa=12, nivel = 3)
         ]
         self.andar_atual = 0
         self.batalha_atual = None
