@@ -1,21 +1,23 @@
 import pygame
-from Game.ui.button import Button
+from ui.button import Button
+import pygame
+from scenes.gameplay import GameplayScene
 
-class MenuScene:
+
+class MenuScene(Scene):
     def __init__(self, game):
-        self.game = game
-        self.fonte = pygame.font.SysFont(None, 40)
-        self.botao_jogar = Button(300, 250, 200, 60, "Jogar", self.fonte, (200,200,200), (255,255,255))
+        super().__init__(game)
+        self.font = pygame.font.SysFont(None, 40)
+        self.play_button = Button(300, 250, 200, 60, "Jogar", self.font, (200,200,200), (255,255,255))
 
     def handle_events(self, events):
-        for evento in events:
-            if self.botao_jogar.foi_clicado(evento):
-                from scenes.jogo import GameScene
-                self.game.trocar_cena(GameScene(self.game))
+        for event in events:
+            if self.play_button.foi_clicado(event):
+                self.game.change_scene(GameplayScene(self.game))
 
     def update(self):
-        self.botao_jogar.checar_hover(pygame.mouse.get_pos())
+        self.play_button.checar_hover(pygame.mouse.get_pos())
 
-    def draw(self, tela):
-        tela.fill((50, 50, 50))
-        self.botao_jogar.desenhar(tela)
+    def draw(self, screen):
+        screen.fill((50, 50, 50))
+        self.play_button.desenhar(screen)
