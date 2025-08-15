@@ -1,0 +1,40 @@
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ambiente virtual
+venv/
+env/
+.venv/
+
+# Pygame / assets temporários
+*.py~ 
+*.tmp
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Arquivos de log
+*.log
+
+# Arquivos de build ou distribuição
+build/
+dist/
+*.egg-info/
+
+# Arquivos pessoais / config local
+*.env
+*.sqlite3
+
+# Arquivos gerados pelo Pygame (se houver)
+*.wav~
+*.mp3~
+*.ogg~
