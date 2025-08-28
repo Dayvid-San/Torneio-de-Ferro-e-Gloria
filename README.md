@@ -26,8 +26,8 @@ Criar um RPG jogável com:
 
 ### 🔨 Tarefas Gerais de Desenvolvimento
 
-- [ ] Criação das **classes de personagens**
-  - [ ] Definir nomes e estilos de luta
+- [x] Criação das **classes de personagens**
+  - [x] Definir nomes e estilos de luta
   - [ ] Atribuir atributos D&D (STR, DEX, CON, etc.)
   - [ ] Criar habilidades únicas e passivas
   - [ ] Escrever mini-lore de cada personagem
