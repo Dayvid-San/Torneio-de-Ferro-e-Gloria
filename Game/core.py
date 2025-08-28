@@ -1,7 +1,4 @@
 import pygame
-from scenes.menu import MenuScene
-
-
 
 class Game:
     def __init__(self):
@@ -10,6 +7,7 @@ class Game:
         pygame.display.set_caption("Torneio de Ferro e Sangue")
         self.clock = pygame.time.Clock()
         self.running = True
+        from Game.scenes.menu import MenuScene  # Com Game.
         self.currentScene = MenuScene(self)
 
     def change_scene(self, new_scene):

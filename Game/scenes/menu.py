@@ -1,8 +1,6 @@
 import pygame
-from ui.button import Button
-import pygame
-from scenes.gameplay import GameplayScene
-
+from Game.ui.button import Button
+from Game.scenes.scenes import Scene  # Use Game. aqui também
 
 class MenuScene(Scene):
     def __init__(self, game):
@@ -13,6 +11,7 @@ class MenuScene(Scene):
     def handle_events(self, events):
         for event in events:
             if self.play_button.foi_clicado(event):
+                from Game.scenes.gameplay import GameplayScene
                 self.game.change_scene(GameplayScene(self.game))
 
     def update(self):
