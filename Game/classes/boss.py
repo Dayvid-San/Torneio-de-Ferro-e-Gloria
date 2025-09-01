@@ -1,8 +1,8 @@
 from personagem import Personagem
 
 class Boss(Personagem):
-    def __init__(self, nome: str, vida_max: int, numeroAtaques: int, nivel: int):
-        super().__init__(nome, vida_max)
+    def __init__(self, nome: str, vida_max: int,  ataque: int, defesa: int, numeroAtaques: int, nivel: int):
+        super().__init__(nome, vida_max,  ataque, defesa)
         self.__numeroAtaques = numeroAtaques # Atributo para definir o número de dificuldade do BOSS conforme o nível da torre
         self.__nivel = nivel
 

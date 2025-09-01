@@ -32,7 +32,7 @@ Criar um RPG jogável com:
   - [ ] Criar habilidades únicas e passivas
   - [ ] Escrever mini-lore de cada personagem
 
-- [ ] Criação dos **cenários de combate**
+- [x] Criação dos **cenários de combate**
   - [ ] Definir 3 a 5 arenas com efeitos únicos
   - [ ] Associar penalidades ou bônus ambientais
   - [ ] Criar imagens ou descrições visuais das arenas (caso tenha)

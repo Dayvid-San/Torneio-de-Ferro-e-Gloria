@@ -1,12 +1,16 @@
 from personagem import Personagem
 
 class Jogador(Personagem):
-    def __init__(self, nome: str, vida_max: int):
-        super().__init__(nome, vida_max)
+    def __init__(self, nome: str, vida_max: int, ataque: int, defesa: int):
+        super().__init__(nome, vida_max, ataque, defesa)
         self.pontos = 0
         self.acoes_defesa = 1 
         self.acoes_cura = 1   
 
+
+#================= Mecanincas Atreladas aos players=============
+   
+   #posteriormente utilizar esses métodos na barra de select na interface
     def defender(self) -> str:
         if self.acoes_defesa > 0:
             self.defesa += 10 
