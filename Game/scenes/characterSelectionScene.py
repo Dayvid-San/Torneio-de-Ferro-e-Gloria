@@ -7,7 +7,7 @@ class CharacterSelectionScene(Scene):
     def __init__(self, game):
         super().__init__(game)
         self.font = pygame.font.SysFont(None, 40)
-        self.title = self.font.render("Seleção de Personagens", True, (255, 255, 255))
+        self.title = self.font.render("Selecione o Lutador", True, (255, 255, 255))
 
         # Carregar imagem de fundo
         self.background = pygame.image.load("public/fundo.jpeg").convert()
@@ -29,9 +29,9 @@ class CharacterSelectionScene(Scene):
 
         # Descrições dos personagens
         self.descriptions = {
-            "Assassino": "Um assassino ágil com precisão mortal e ataques à distância.",
-            "Cavaleiro": "Um guerreiro valente com força bruta e habilidades de combate corpo a corpo.",
-            "Mago": "Um mago sábio que domina feitiços de fogo e gelo."
+            "Henrique": "Naufrago nas praias do condado e capturado roubando uma lorde, esse estrangeiro foi tomado como prisioneiro e agora luta por sua liberdade, na arena.",
+            "Sula": "Fracassado e na batalha dos sete exércitos. Sula busca o perdão prometido em vitória na arena.",
+            "Mago": "Um velho sábio (ou louco) do novo continente. Ele se diverte com seus experimentos em humanas e procura se entreter na arena."
         }
         self.selected_character = None  # Personagem em hover ou selecionado
         self.description_text = None  # Texto da descrição a ser renderizado
@@ -65,10 +65,10 @@ class CharacterSelectionScene(Scene):
         # Atualizar descrição com base no hover
         if self.char1_button.hovered:
             self.selected_character = "Assassino"
-            self.description_text = self.font.render(self.descriptions["Assassino"], True, (255, 255, 255))
+            self.description_text = self.font.render(self.descriptions["Henrique"], True, (255, 255, 255))
         elif self.char2_button.hovered:
             self.selected_character = "Cavaleiro"
-            self.description_text = self.font.render(self.descriptions["Cavaleiro"], True, (255, 255, 255))
+            self.description_text = self.font.render(self.descriptions["Sula"], True, (255, 255, 255))
         elif self.char3_button.hovered:
             self.selected_character = "Mago"
             self.description_text = self.font.render(self.descriptions["Mago"], True, (255, 255, 255))
