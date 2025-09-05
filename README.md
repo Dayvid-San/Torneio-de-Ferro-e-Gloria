@@ -1,4 +1,4 @@
-# 🛡️ O Torneio de Ferro e Glória
+# 🛡️ O Torneio de Ferro 
 
 ## Criadores do projetos
 - Dayvid
