@@ -37,7 +37,14 @@ class Jogador(Personagem):
     def mostrar_status(self):
         return f"Nome: {self.nome}\nVida: {self.vida_atual}/{self.vida_max}\nAtaque: {self.ataque}\nDefesa: {self.defesa}\nPontos: {self.pontos}"
 
-
+  
+    def resetarDefesa(self):
+        """
+        Método temporário para evitar o erro.
+        Ainda precisa da implementação final.
+        """
+        # A palavra "pass" significa "não faça nada e continue".
+        pass
 # ===================================================================
 
 class Mago(Jogador):
@@ -78,5 +85,5 @@ class Assassino(Jogador):
         pass
 
     # Metodo de Dano
-    def ReceberDano(self): # Metodo Personalizado da Classe Assassino
+    def ReceberDano(self, dano_recebido): # Metodo Personalizado da Classe Assassino
         pass  
