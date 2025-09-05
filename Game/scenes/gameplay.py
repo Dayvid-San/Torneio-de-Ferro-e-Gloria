@@ -1,6 +1,6 @@
 import pygame
-from Game.scenes.scene_base import Scene  # Com Game.
-from Game.scenes.menu import MenuScene  # Com Game.
+from Game.scenes.scenes import Scene  
+from Game.scenes.menu import MenuScene 
 
 
 class GameplayScene(Scene):
