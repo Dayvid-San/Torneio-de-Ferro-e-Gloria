@@ -7,6 +7,7 @@ class CharacterSelectionScene(Scene):
     def __init__(self, game):
         super().__init__(game)
         self.font = pygame.font.SysFont(None, 40)
+        self.font2 = pygame.font.SysFont(None, 30)
         self.title = self.font.render("Seleção de Personagens", True, (255, 255, 255))
 
         # Carregar imagem de fundo
@@ -35,6 +36,27 @@ class CharacterSelectionScene(Scene):
         }
         self.selected_character = None  # Personagem em hover ou selecionado
         self.description_text = None  # Texto da descrição a ser renderizado
+
+
+    def render_text_wrapped(self, text, font, color, max_width):
+            """
+            Renderiza um texto quebrando em múltiplas linhas se passar do max_width.
+            Retorna uma lista de superfícies (cada uma é uma linha renderizada).
+            """
+            words = text.split(" ")
+            lines = []
+            current_line = ""
+
+            for word in words:
+                test_line = current_line + word + " "
+                if font.size(test_line)[0] <= max_width:
+                    current_line = test_line
+                else:
+                    lines.append(current_line)
+                    current_line = word + " "
+            lines.append(current_line)
+
+            return [font.render(line, True, color) for line in lines]
 
     def handle_events(self, events):
         for event in events:
@@ -65,16 +87,43 @@ class CharacterSelectionScene(Scene):
         # Atualizar descrição com base no hover
         if self.char1_button.hovered:
             self.selected_character = "Assassino"
-            self.description_text = self.font.render(self.descriptions["Assassino"], True, (255, 255, 255))
+            self.description_text = self.render_text_wrapped(
+                self.descriptions["Assassino"], self.font2, (255, 255, 255), max_width=400
+            )
+            
         elif self.char2_button.hovered:
             self.selected_character = "Cavaleiro"
-            self.description_text = self.font.render(self.descriptions["Cavaleiro"], True, (255, 255, 255))
+            self.description_text = self.render_text_wrapped(
+                self.descriptions["Cavaleiro"], self.font2, (255, 255, 255), max_width=400
+            )
         elif self.char3_button.hovered:
             self.selected_character = "Mago"
-            self.description_text = self.font.render(self.descriptions["Mago"], True, (255, 255, 255))
+            self.description_text = self.render_text_wrapped(
+                self.descriptions["Mago"], self.font2, (255, 255, 255), max_width=400
+            )
         else:
             self.selected_character = None
             self.description_text = None
+
+    def draw_text_box(self, screen, lines, x, y, padding=10):
+        # calcula largura e altura do box
+        width = max(line.get_width() for line in lines) + 2 * padding
+        height = len(lines) * self.font2.get_linesize() + 2 * padding
+
+        # cria uma surface transparente
+        box_surface = pygame.Surface((width, height), pygame.SRCALPHA)
+        box_surface.fill((0, 0, 0, 150))  # preto com 150 de alpha
+
+        # desenha a caixa
+        screen.blit(box_surface, (x, y))
+
+        # desenha o texto dentro
+        offset_y = padding
+        for line in lines:
+            screen.blit(line, (x + padding, y + offset_y))
+            offset_y += self.font2.get_linesize()
+
+
 
     def draw(self, screen):
         # Desenhar fundo
@@ -93,6 +142,13 @@ class CharacterSelectionScene(Scene):
         self.char2_button.desenhar(screen)
         self.char3_button.desenhar(screen)
 
-        # Desenhar descrição do personagem em hover (à direita)
+        # Desenhar descrição do personagem em hover (à direita) 
         if self.description_text:
-            screen.blit(self.description_text, (350, 200))
+            if self.char1_button.hovered:
+                self.draw_text_box(screen, self.description_text, 320, 200)
+
+            if self.char2_button.hovered:
+                self.draw_text_box(screen, self.description_text, 320, 300)
+
+            if self.char3_button.hovered:
+                self.draw_text_box(screen, self.description_text, 320, 400)
