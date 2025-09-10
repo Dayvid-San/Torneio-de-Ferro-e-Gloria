@@ -36,6 +36,6 @@ class MenuScene(Scene):
     def draw(self, screen):
         # Desenhar fundo
         screen.blit(self.background, (0, 0))
-        screen.blit(self.title, (230, 100))
+        screen.blit(self.title, (238, 100))
         # Desenhar botão
         self.select_character.desenhar(screen)
