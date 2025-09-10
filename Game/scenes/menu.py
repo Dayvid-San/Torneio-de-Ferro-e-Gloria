@@ -20,7 +20,8 @@ class MenuScene(Scene):
             print("Arquivo 'public/torneio_ferro_e_sangue.png' não encontrado. Usando fundo cinza.")
             screen_size = self.game.screen.get_size() if hasattr(self.game, 'screen') else (800, 600)
             self.background = pygame.Surface(screen_size)
-            self.background.fill((50, 50, 50))
+            self.dark_overlay = pygame.Surface(self.background.get_size(), pygame.SRCALPHA)
+            self.dark_overlay.fill((0, 0, 0, 180))  # 120 = nível de escuridão (0-255)
 
     def handle_events(self, events):
         for event in events:
@@ -28,14 +29,13 @@ class MenuScene(Scene):
             if self.select_character.foi_clicado(event):
                 from Game.scenes.characterSelectionScene import CharacterSelectionScene
                 self.game.change_scene(CharacterSelectionScene(self.game))
-
+    
     def update(self):
         mouse_pos = pygame.mouse.get_pos()
         self.select_character.checar_hover(mouse_pos)
 
     def draw(self, screen):
-        # Desenhar fundo
-        screen.blit(self.background, (0, 0))
-        screen.blit(self.title, (238, 100))
-        # Desenhar botão
+        screen.fill((50, 50, 50))
+        screen.blit(self.background, (0, 0))   
+        #screen.blit(self.dark_overlay, (0, 0))               
         self.select_character.desenhar(screen)
