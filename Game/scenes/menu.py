@@ -7,14 +7,25 @@ class MenuScene(Scene):
     def __init__(self, game):
         super().__init__(game)
         self.font = pygame.font.SysFont(None, 40)
-        self.select_character = Button(300, 250, 200, 60, "Jogar", self.font, (200,200,200), (255,255,255))
-        self.background = pygame.image.load("public/fundo.jpeg").convert()
-        self.dark_overlay = pygame.Surface(self.background.get_size(), pygame.SRCALPHA)
-        self.dark_overlay.fill((0, 0, 0, 180))  # 120 = nível de escuridão (0-255)
-    
+        self.title = self.font.render("Torneio de Ferro e Sangue", True, (225, 165, 0))
+        self.select_character = Button(300, 250, 200, 60, "Jogadores", self.font, (200, 200, 200), (255, 255, 255))
+        
+        # Carregar e escalar imagem de fundo
+        try:
+            self.background = pygame.image.load("public/torneio_ferro_e_sangue.png").convert()
+            # Escalar para o tamanho da tela (assumindo 800x600 ou obtido de self.game.screen)
+            screen_size = self.game.screen.get_size() if hasattr(self.game, 'screen') else (800, 600)
+            self.background = pygame.transform.scale(self.background, screen_size)
+        except FileNotFoundError:
+            print("Arquivo 'public/torneio_ferro_e_sangue.png' não encontrado. Usando fundo cinza.")
+            screen_size = self.game.screen.get_size() if hasattr(self.game, 'screen') else (800, 600)
+            self.background = pygame.Surface(screen_size)
+            self.dark_overlay = pygame.Surface(self.background.get_size(), pygame.SRCALPHA)
+            self.dark_overlay.fill((0, 0, 0, 180))  # 120 = nível de escuridão (0-255)
+
     def handle_events(self, events):
         for event in events:
-            # Logica do botões
+            # Lógica dos botões
             if self.select_character.foi_clicado(event):
                 from Game.scenes.characterSelectionScene import CharacterSelectionScene
                 self.game.change_scene(CharacterSelectionScene(self.game))
@@ -26,5 +37,5 @@ class MenuScene(Scene):
     def draw(self, screen):
         screen.fill((50, 50, 50))
         screen.blit(self.background, (0, 0))   
-        screen.blit(self.dark_overlay, (0, 0))               
+        #screen.blit(self.dark_overlay, (0, 0))               
         self.select_character.desenhar(screen)

@@ -1,6 +1,8 @@
 import pygame
 from Game.ui.button import Button
 from Game.scenes.scenes import Scene
+from Game.scenes.gameplay import GameplayScene
+from Game.scenes.menu import MenuScene
 
 
 class CharacterSelectionScene(Scene):
@@ -8,7 +10,7 @@ class CharacterSelectionScene(Scene):
         super().__init__(game)
         self.font = pygame.font.SysFont(None, 40)
         self.font2 = pygame.font.SysFont(None, 30)
-        self.title = self.font.render("Seleção de Personagens", True, (255, 255, 255))
+        self.title = self.font.render("Selecione o Lutador", True, (255, 255, 255))
 
         # Carregar imagem de fundo
         self.background = pygame.image.load("public/fundo.jpeg").convert()
@@ -30,9 +32,9 @@ class CharacterSelectionScene(Scene):
 
         # Descrições dos personagens
         self.descriptions = {
-            "Assassino": "Um assassino ágil com precisão mortal e ataques à distância.",
-            "Cavaleiro": "Um guerreiro valente com força bruta e habilidades de combate corpo a corpo.",
-            "Mago": "Um mago sábio que domina feitiços de fogo e gelo."
+            "Assassino": "Henrique, o naufrago nas praias do condado e capturado roubando uma lorde, esse estrangeiro foi tomado como prisioneiro e agora luta por sua liberdade, na arena.",
+            "Cavaleiro": "Sula, o fracassado e desertor na batalha dos sete exércitos. Sula busca o perdão prometido em vitória na arena.",
+            "Mago": "Arnabin, um velho sábio (ou louco) do novo continente. Ele se diverte com seus experimentos em humanos e procura se entreter na arena."
         }
         self.selected_character = None  # Personagem em hover ou selecionado
         self.description_text = None  # Texto da descrição a ser renderizado
@@ -62,20 +64,16 @@ class CharacterSelectionScene(Scene):
         for event in events:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:  # Voltar ao menu
-                    from Game.scenes.menu import MenuScene
                     self.game.change_scene(MenuScene(self.game))
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if self.char1_button.foi_clicado(event):
                     self.game.selected_character = "Assassino"  # Salvar personagem selecionado
-                    from Game.scenes.gameplay import GameplayScene
                     self.game.change_scene(GameplayScene(self.game))
                 if self.char2_button.foi_clicado(event):
                     self.game.selected_character = "Cavaleiro"
-                    from Game.scenes.gameplay import GameplayScene
                     self.game.change_scene(GameplayScene(self.game))
                 if self.char3_button.foi_clicado(event):
                     self.game.selected_character = "Mago"
-                    from Game.scenes.gameplay import GameplayScene
                     self.game.change_scene(GameplayScene(self.game))
 
     def update(self):
@@ -87,6 +85,7 @@ class CharacterSelectionScene(Scene):
         # Atualizar descrição com base no hover
         if self.char1_button.hovered:
             self.selected_character = "Assassino"
+
             self.description_text = self.render_text_wrapped(
                 self.descriptions["Assassino"], self.font2, (255, 255, 255), max_width=400
             )
