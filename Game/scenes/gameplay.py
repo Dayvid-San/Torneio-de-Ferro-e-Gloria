@@ -66,7 +66,7 @@ class GameplayScene(Scene):
         # Textos para nomes e turno
         self.player_text = self.font.render(self.player_character, True, (255, 255, 255))
         self.opponent_text = self.font.render(self.opponent_character, True, (255, 255, 255))
-        self.turn_text = self.font.render("Seu Turno", True, (255, 255, 255))
+        self.turn_text = self.font.render("Clique nos botões", True, (255, 255, 255))
 
     def load_animation(self, character, action_type="idle"):
         """Carrega animação baseada no tipo (idle, physical, magic)."""

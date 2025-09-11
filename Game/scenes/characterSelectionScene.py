@@ -40,7 +40,7 @@ class CharacterSelectionScene(Scene):
 
         # Descrições dos personagens
         self.descriptions = {
-            "Assassino": "Henrique, o naufrago nas praias do condado e capturado roubando uma lorde, esse estrangeiro foi tomado como prisioneiro e agora luta por sua liberdade, na arena.",
+            "Assassino": "Henrique, naufrago nas praias do condado e capturado roubando uma lorde, esse estrangeiro foi tomado como prisioneiro e agora luta por sua liberdade, na arena.",
             "Cavaleiro": "Sula, o fracassado e desertor na batalha dos sete exércitos. Sula busca o perdão prometido em vitória na arena.",
             "Mago": "Arnabin, um velho sábio (ou louco) do novo continente. Ele se diverte com seus experimentos em humanos e procura se entreter na arena."
         }
