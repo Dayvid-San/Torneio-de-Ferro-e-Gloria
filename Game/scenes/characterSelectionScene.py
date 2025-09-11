@@ -13,7 +13,15 @@ class CharacterSelectionScene(Scene):
         self.title = self.font.render("Selecione o Lutador", True, (255, 255, 255))
 
         # Carregar imagem de fundo
-        self.background = pygame.image.load("public/fundo.jpeg").convert()
+        try:
+            self.background = pygame.image.load("public/fundo.jpeg").convert()
+            screen_size = self.game.screen.get_size()
+            self.background = pygame.transform.scale(self.background, screen_size)
+        except FileNotFoundError:
+            print("Fundo não encontrado. Usando preto.")
+            screen_size = self.game.screen.get_size()
+            self.background = pygame.Surface(screen_size)
+            self.background.fill((0, 0, 0))
 
         # Botões dos personagens (seletores)
         self.char1_button = Button(150, 200, 150, 50, "Assassino", self.font, (200, 200, 200), (255, 255, 255))
