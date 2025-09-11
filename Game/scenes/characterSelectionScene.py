@@ -13,7 +13,15 @@ class CharacterSelectionScene(Scene):
         self.title = self.font.render("Selecione o Lutador", True, (255, 255, 255))
 
         # Carregar imagem de fundo
-        self.background = pygame.image.load("public/fundo.jpeg").convert()
+        try:
+            self.background = pygame.image.load("public/fundo.jpeg").convert()
+            screen_size = self.game.screen.get_size()
+            self.background = pygame.transform.scale(self.background, screen_size)
+        except FileNotFoundError:
+            print("Fundo não encontrado. Usando preto.")
+            screen_size = self.game.screen.get_size()
+            self.background = pygame.Surface(screen_size)
+            self.background.fill((0, 0, 0))
 
         # Botões dos personagens (seletores)
         self.char1_button = Button(150, 200, 150, 50, "Assassino", self.font, (200, 200, 200), (255, 255, 255))
@@ -32,7 +40,7 @@ class CharacterSelectionScene(Scene):
 
         # Descrições dos personagens
         self.descriptions = {
-            "Assassino": "Henrique, o naufrago nas praias do condado e capturado roubando uma lorde, esse estrangeiro foi tomado como prisioneiro e agora luta por sua liberdade, na arena.",
+            "Assassino": "Henrique, naufrago nas praias do condado e capturado roubando uma lorde, esse estrangeiro foi tomado como prisioneiro e agora luta por sua liberdade, na arena.",
             "Cavaleiro": "Sula, o fracassado e desertor na batalha dos sete exércitos. Sula busca o perdão prometido em vitória na arena.",
             "Mago": "Arnabin, um velho sábio (ou louco) do novo continente. Ele se diverte com seus experimentos em humanos e procura se entreter na arena."
         }
