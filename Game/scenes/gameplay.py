@@ -1,16 +1,19 @@
 import pygame
 import random
-import time  # Para delays
 from Game.ui.animations import Animation
-from Game.ui.button import Button  # Ajuste se for buttons.py
-from Game.scenes.scenes import Scene  # Ajuste se for scenes.py
+from Game.ui.button import Button
+from Game.scenes.scenes import Scene
 from Game.scenes.menu import MenuScene
 
 class GameplayScene(Scene):
     def __init__(self, game):
         super().__init__(game)
         self.font = pygame.font.SysFont(None, 40)
-        self.clock = pygame.time.Clock()  # Para controlar FPS
+        self.clock = pygame.time.Clock()
+        self.action_delay_start = 0
+        self.is_action_in_progress = False
+        self.last_attacker = None
+        self.pending_opponent = False  # Novo flag para sequencializar ações
 
         # Tamanho da tela
         self.screen_width, self.screen_height = self.game.screen.get_size()
@@ -28,14 +31,14 @@ class GameplayScene(Scene):
         self.characters = ["Assassino", "Cavaleiro", "Mago"]
         self.character_stats = {
             "Assassino": {"physical": 25, "magic": 15, "idle_paths": ["public/moveChar/right_assassino_idle_1.png", "public/moveChar/right_assassino_idle_2.png"],
-                                  "physical_paths": ["public/moveChar/right_assassino_ataque_fisico_1.png", "public/moveChar/right_assassino_ataque_fisico_2.png"],
-                                  "magic_paths": ["public/moveChar/right_assassino_magico_1.png", "public/moveChar/right_assassino_magico_2.png"]},
+                          "physical_paths": ["public/moveChar/right_assassino_ataque_fisico_1.png", "public/moveChar/right_assassino_ataque_fisico_2.png"],
+                          "magic_paths": ["public/moveChar/right_assassino_magico_1.png", "public/moveChar/right_assassino_magico_2.png"]},
             "Cavaleiro": {"physical": 30, "magic": 10, "idle_paths": ["public/moveChar/right_cavaleiro_idle_1.png", "public/moveChar/right_cavaleiro_idle_2.png"],
-                                  "physical_paths": ["public/moveChar/right_cavaleiro_ataque_fisico_1.png", "public/moveChar/right_cavaleiro_ataque_fisico_2.png"],
-                                  "magic_paths": ["public/moveChar/right_cavaleiro_magico_1.png", "public/moveChar/right_cavaleiro_magico_2.png"]},
+                          "physical_paths": ["public/moveChar/right_cavaleiro_ataque_fisico_1.png", "public/moveChar/right_cavaleiro_ataque_fisico_2.png"],
+                          "magic_paths": ["public/moveChar/right_cavaleiro_magico_1.png", "public/moveChar/right_cavaleiro_magico_2.png"]},
             "Mago": {"physical": 10, "magic": 35, "idle_paths": ["public/moveChar/right_mago_idle_1.png", "public/moveChar/right_mago_idle_2.png"],
-                             "physical_paths": ["public/moveChar/right_mago_ataque_fisico_1.png", "public/moveChar/right_mago_ataque_fisico_2.png"],
-                             "magic_paths": ["public/moveChar/right_mago_magico_1.png", "public/moveChar/right_mago_magico_2.png"]}
+                     "physical_paths": ["public/moveChar/right_mago_ataque_fisico_1.png", "public/moveChar/right_mago_ataque_fisico_2.png"],
+                     "magic_paths": ["public/moveChar/right_mago_magico_1.png", "public/moveChar/right_mago_magico_2.png"]}
         }
 
         # Personagem selecionado
@@ -43,45 +46,45 @@ class GameplayScene(Scene):
         available_opponents = [char for char in self.characters if char != self.player_character]
         self.opponent_character = random.choice(available_opponents)
 
-        # Carregar animações idle iniciais
+        # Carregar animações
         self.player_animation = self.load_animation(self.player_character, "idle")
-        self.opponent_animation = self.load_animation(self.opponent_character, "idle")
+        self.opponent_animation = self.load_animation(self.opponent_character, "idle", flip_x=True)
 
         # Atributos de combate
         self.player_health = 100
-        self.max_health = 100  # Para cálculo proporcional de barras
+        self.max_health = 100
         self.opponent_health = 100
         self.is_player_turn = True
         self.game_over = False
         self.winner_text = None
-        self.end_time = 0  # Para delay após vitória
+        self.end_time = 0
 
-        # Botões de ações (centralizados na parte inferior)
+        # Botões de ações
         button_width = 150
         button_height = 50
         button_y = self.screen_height - 100
         self.physical_button = Button(self.screen_width // 3 - button_width // 2, button_y, button_width, button_height, "Ataque Físico", self.font, (200, 200, 200), (255, 255, 255))
         self.magic_button = Button(2 * self.screen_width // 3 - button_width // 2, button_y, button_width, button_height, "Magia", self.font, (200, 200, 200), (255, 255, 255))
 
-        # Textos para nomes e turno
+        # Textos
         self.player_text = self.font.render(self.player_character, True, (255, 255, 255))
         self.opponent_text = self.font.render(self.opponent_character, True, (255, 255, 255))
-        self.turn_text = self.font.render("Clique nos botões", True, (255, 255, 255))
+        self.turn_text = self.font.render("Seu Turno", True, (255, 255, 255))
 
-    def load_animation(self, character, action_type="idle"):
-        """Carrega animação baseada no tipo (idle, physical, magic)."""
+    def load_animation(self, character, action_type="idle", flip_x=False):
+        """Carrega animação baseada no tipo, com opção de flip."""
         paths_key = f"{action_type}_paths" if action_type != "idle" else "idle_paths"
         paths = self.character_stats[character].get(paths_key, [])
         try:
-            return Animation(paths, frame_duration=0.25, scale_size=(200, 200))
+            return Animation(paths, frame_duration=0.25, scale_size=(200, 200), flip_x=flip_x)
         except FileNotFoundError:
             print(f"Animação {action_type} para {character} não encontrada. Usando estática.")
             static_path = f"public/IconesJogo/{character.lower()}.jpeg"
-            return Animation([static_path], frame_duration=0.15, scale_size=(200, 200))
+            return Animation([static_path], frame_duration=0.15, scale_size=(200, 200), flip_x=flip_x)
 
     def handle_events(self, events):
         if self.game_over:
-            return  # Ignora eventos se jogo acabou
+            return
         for event in events:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
@@ -95,16 +98,17 @@ class GameplayScene(Scene):
                     self.end_player_turn()
 
     def perform_action(self, action, attacker, target):
-        """Executa ação, calcula dano, troca animação temporariamente."""
-        # Trocar para animação de ação
+        """Executa ação, calcula dano, troca animação."""
+        self.last_attacker = attacker
+        flip_x = attacker == self.opponent_character
         if attacker == self.player_character:
             self.player_animation = self.load_animation(attacker, action)
             self.player_animation.reset()
         else:
-            self.opponent_animation = self.load_animation(attacker, action)
+            self.opponent_animation = self.load_animation(attacker, action, flip_x=flip_x)
             self.opponent_animation.reset()
 
-        # Calcular dano baseado em stats
+        # Calcular dano
         damage = self.character_stats[attacker][action]
         if attacker == self.player_character:
             self.opponent_health = max(0, self.opponent_health - damage)
@@ -113,24 +117,15 @@ class GameplayScene(Scene):
             self.player_health = max(0, self.player_health - damage)
             print(f"{attacker} usou {action.capitalize()}, causando {damage} de dano a {target}.")
 
-        # Delay para ver animação (0.8s)
-        time.sleep(0.8)
-
-        # Voltar para idle
-        if attacker == self.player_character:
-            self.player_animation = self.load_animation(attacker, "idle")
-        else:
-            self.opponent_animation = self.load_animation(attacker, "idle")
+        # Iniciar delay não-bloqueante
+        self.is_action_in_progress = True
+        self.action_delay_start = pygame.time.get_ticks()
 
     def end_player_turn(self):
-        """Finaliza turno do jogador e inicia do oponente."""
+        """Finaliza turno do jogador e sinaliza ação do oponente."""
+        self.pending_opponent = True
         self.is_player_turn = False
         self.turn_text = self.font.render("Turno do Oponente", True, (255, 255, 255))
-        # Oponente escolhe ação aleatória
-        opponent_action = random.choice(["physical", "magic"])
-        self.perform_action(opponent_action, self.opponent_character, self.player_character)
-        self.is_player_turn = True
-        self.turn_text = self.font.render("Seu Turno", True, (255, 255, 255))
 
     def update(self):
         if self.game_over:
@@ -138,56 +133,67 @@ class GameplayScene(Scene):
                 self.game.change_scene(MenuScene(self.game))
             return
 
-        # Atualizar animações
+        # Atualizar animações sempre
         self.player_animation.update()
         self.opponent_animation.update()
+
+        # Gerenciar delay de ação
+        if self.is_action_in_progress:
+            if pygame.time.get_ticks() - self.action_delay_start >= 800:
+                # Fim do delay: voltar para idle
+                if self.last_attacker == self.player_character:
+                    self.player_animation = self.load_animation(self.player_character, "idle", flip_x=False)
+                elif self.last_attacker == self.opponent_character:
+                    self.opponent_animation = self.load_animation(self.opponent_character, "idle", flip_x=True)
+
+                self.is_action_in_progress = False
+
+                if self.pending_opponent:
+                    self.pending_opponent = False
+                    opponent_action = random.choice(["physical", "magic"])
+                    self.perform_action(opponent_action, self.opponent_character, self.player_character)
+                else:
+                    if not self.is_player_turn:
+                        self.is_player_turn = True
+                        self.turn_text = self.font.render("Seu Turno", True, (255, 255, 255))
 
         # Verificar fim do jogo
         if self.player_health <= 0:
             self.game_over = True
             self.winner_text = self.font.render("Você Perdeu!", True, (255, 0, 0))
-            self.end_time = pygame.time.get_ticks() + 2000  # 2s delay
+            self.end_time = pygame.time.get_ticks() + 2000
         elif self.opponent_health <= 0:
             self.game_over = True
             self.winner_text = self.font.render("Você Venceu!", True, (0, 255, 0))
-            self.end_time = pygame.time.get_ticks() + 2000  # 2s delay
+            self.end_time = pygame.time.get_ticks() + 2000
 
-        self.clock.tick(60)  # Limitar a 60 FPS
+        self.clock.tick(60)
 
     def draw(self, screen):
-        # Desenhar fundo
         screen.blit(self.background, (0, 0))
 
-        # Posições dinâmicas para sprites (esquerda/direita)
         player_x = self.screen_width // 4 - 100
         opponent_x = 3 * self.screen_width // 4 - 100
         char_y = self.screen_height // 2
 
-        # Desenhar sprite do jogador
         screen.blit(self.player_animation.get_current_frame(), (player_x, char_y))
         screen.blit(self.player_text, (player_x, char_y - 70))
-        # Barra de vida proporcional (vermelha se baixa)
         health_width = int(200 * (self.player_health / self.max_health))
-        health_color = (255, 0, 0) if self.player_health > 20 else (255, 100, 100)  # Vermelho claro se crítico
+        health_color = (255, 0, 0) if self.player_health > 20 else (255, 100, 100)
         pygame.draw.rect(screen, health_color, (player_x, char_y - 50, health_width, 20))
-        pygame.draw.rect(screen, (255, 255, 255), (player_x, char_y - 50, 200, 20), 2)  # Borda
+        pygame.draw.rect(screen, (255, 255, 255), (player_x, char_y - 50, 200, 20), 2)
 
-        # Desenhar sprite do oponente
         screen.blit(self.opponent_animation.get_current_frame(), (opponent_x, char_y))
         screen.blit(self.opponent_text, (opponent_x, char_y - 70))
         health_width = int(200 * (self.opponent_health / self.max_health))
         health_color = (255, 0, 0) if self.opponent_health > 20 else (255, 100, 100)
         pygame.draw.rect(screen, health_color, (opponent_x, char_y - 50, health_width, 20))
-        pygame.draw.rect(screen, (255, 255, 255), (opponent_x, char_y - 50, 200, 20), 2)  # Borda
+        pygame.draw.rect(screen, (255, 255, 255), (opponent_x, char_y - 50, 200, 20), 2)
 
-        # Desenhar botões (apenas no turno do jogador e se não game over)
-        if self.is_player_turn and not self.game_over:
+        if self.is_player_turn and not self.game_over and not self.is_action_in_progress:
             self.physical_button.desenhar(screen)
             self.magic_button.desenhar(screen)
 
-        # Desenhar texto do turno
         screen.blit(self.turn_text, (self.screen_width // 2 - 100, 50))
-
-        # Desenhar texto de vencedor se game over
         if self.game_over and self.winner_text:
             screen.blit(self.winner_text, (self.screen_width // 2 - 150, self.screen_height // 2 - 50))
