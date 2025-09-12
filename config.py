@@ -20,3 +20,7 @@ END_GAME_DELAY_MS = 2000
 # Posições e Tamanhos de UI
 HEALTH_BAR_WIDTH = 200
 HEALTH_BAR_HEIGHT = 20
+
+# As coordenadas Y(chão) e X (altura) dos personagens
+ARENA_GROUND_Y = 530 
+CHARACTER_HEIGHT = 200 

@@ -9,6 +9,7 @@ class Character:
         self.max_health = 100
         self.current_health = self.max_health
         self.is_flipped = is_flipped
+        self.is_defending = False
         
         # Carrega todas as animações do personagem
         self.animations = self._load_animations(data['animations'])
@@ -31,7 +32,24 @@ class Character:
             self.current_animation = self.animations['idle']
 
     def take_damage(self, amount):
-        self.current_health = max(0, self.current_health - amount)
+        damage_taken = amount
+        if self.is_defending:
+            defense_value = self.stats.get("defense", 0)
+            damage_taken = max(0, amount - defense_value) # Garante que o dano não seja negativo
+            print(f"{self.name} defendeu {defense_value} de dano!")
+            self.is_defending = False # A defesa é consumida após um ataque
+
+        self.current_health = max(0, self.current_health - damage_taken)
+        print(f"{self.name} tomou {damage_taken} de dano, vida restante: {self.current_health}")
+
+    def defend(self):
+        self.is_defending = True
+        print(f"{self.name} está se preparando para defender.")
+
+    def heal(self): 
+        heal_amount = self.stats.get("heal", 0)
+        self.current_health = min(self.max_health, self.current_health + heal_amount)
+        print(f"{self.name} se curou em {heal_amount}, vida atual: {self.current_health}")
 
     def get_damage(self, attack_type):
         return self.stats.get(attack_type, 0)
