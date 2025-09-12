@@ -98,7 +98,6 @@ class GameplayScene(Scene):
                     self.end_player_turn()
 
     def perform_action(self, action, attacker, target):
-        """Executa ação, calcula dano, troca animação."""
         self.last_attacker = attacker
         flip_x = attacker == self.opponent_character
         if attacker == self.player_character:
