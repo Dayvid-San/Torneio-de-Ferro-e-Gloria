@@ -37,7 +37,7 @@ class Jogo:
             return False
 
         
-#============================================
+#============================== verificar o fim da batalha caso um dos oponentes tenha vida == 0
     def verificar_fim(self) -> str:
         if not self.jogador.estaVivo(): #trocar por valores booleanos 
             print("vitoria_boss")
@@ -48,6 +48,7 @@ class Jogo:
         print("continua")
         return "continua"
 
+# +======================= iniciar batalha
     def iniciar_batalha(self):
         print(f"Uma batalha começou entre {self.jogador.getNome()} e {self.boss.getNome()}!")
        
@@ -67,7 +68,7 @@ class Jogo:
             print("\n" + "="*20 + "\n")
 
         # -- FIM DA BATALHA --
-        '''status = self.verificar_fim()'''
+            #status = self.verificar_fim()
         if self.jogador.estaVivo():
             print(f"Parabéns! Você derrotou {self.boss.getNome()}!")
             return "vitoria_jogador"
@@ -75,6 +76,7 @@ class Jogo:
             print(f"Você foi derrotado por {self.boss.getNome()}.")
             return "vitoria_boss"
 
+# +======================= turno jogador
     def turno_jogador(self):
         # Reseta a defesa do jogador caso ele tenha defendido no turno anterior
         self.jogador.resetarDefesa()# esse método ainda n existe
@@ -90,14 +92,15 @@ class Jogo:
             self.boss.ReceberDano(self.jogador.getAtaque())# método receber dano ainda n foi implementado
         
         elif acao == "2":
-            print(self.jogador.defender())
+            print(self.jogador.defender())# ainda precisa apurar o método
 
         elif acao == "3":
-            print(self.jogador.curar())
+            print(self.jogador.curar())# ainda precisa apurar o método
             
         else:
             print("Ação inválida, você perdeu seu turno!")
 
+# +======================= turno boss
     def turno_boss(self):
         print(f"Turno de {self.boss.getNome()} (Vida: {self.boss.getVidaAtual()})")
         # IA simples: o chefe sempre ataca
