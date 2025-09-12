@@ -12,7 +12,7 @@ class Personagem:
     def setMagia(self, nova_magia: int):
         self.__magia = nova_magia
 
-    def getMagia(self: int):
+    def getMagia(self):
         return self.__magia
     
     def FraseDeEfeito(argumento: str):
