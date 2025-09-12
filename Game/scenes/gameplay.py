@@ -5,7 +5,7 @@ from Game.ui.button import Button
 from Game.scenes.scenes import Scene
 from Game.scenes.menu import MenuScene
 
-from personagem import Personagem
+from Game.scenes.personagem import Personagem
 from mago import Mago
 from cavaleiro import Cavaleiro
 from assasino import Assasino

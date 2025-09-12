@@ -1,5 +1,5 @@
 class Personagem:
-    def __init__(self, fisica, magia):
+    def __init__(self, fisica: int, magia: int):
         self.__fisica = fisica
         self.__magia = magia
 
@@ -9,10 +9,10 @@ class Personagem:
     def getFisica(self):
         return self.__fisica
     
-    def setMagia(self, nova_magia):
+    def setMagia(self, nova_magia: int):
         self.__magia = nova_magia
 
-    def getMagia(self):
+    def getMagia(self: int):
         return self.__magia
     
     def FraseDeEfeito(argumento: str):

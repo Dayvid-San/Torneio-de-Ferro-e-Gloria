@@ -1,4 +1,4 @@
-from personagem import Personagem
+from Game.scenes.personagem import Personagem
 class Mago(Personagem):
     def __init__(self, fisica, magia):
         super().__init__(fisica, magia)
