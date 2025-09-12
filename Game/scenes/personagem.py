@@ -14,3 +14,6 @@ class Personagem:
 
     def getMagia(self):
         return self.__magia
+    
+    def FraseDeEfeito(argumento: str):
+        pass
