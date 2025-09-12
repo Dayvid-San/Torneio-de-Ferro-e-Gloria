@@ -10,7 +10,6 @@ from Game.data.character_data import CHARACTER_DATA
 from Game.scenes.character import Character #por enquanto não alocamos a classe character no pasta entities
 from Game.ui.health_bar import HealthBar #por enquanto não alocamos a classe character no pasta data
 from Game.ui.action_box import ActionBox
-# from Game.config import * # Descomente se for usar o config.py
 
 class GameplayScene(Scene):
     def __init__(self, game):
@@ -29,7 +28,7 @@ class GameplayScene(Scene):
         # --- LÓGICA DE CRIAÇÃO DOS PERSONAGENS ---
         available_chars = list(CHARACTER_DATA.keys())
         player_name = self.game.selected_character or random.choice(available_chars)
-
+        
         if self.game.is_in_tower_mode:
             floor = self.game.current_tower_floor
             if floor < len(TOWER_NORMAL):
@@ -130,7 +129,7 @@ class GameplayScene(Scene):
         self.turn_text = self.font.render("Turno do Oponente", True, (255, 255, 255))
 
     def update(self):
-        # --- PARTE 1: LÓGICA DE FIM DE JOGO E TRANSIÇÃO DE CENAS ---
+        # PARTE 1: LÓGICA DE FIM DE JOGO E TRANSIÇÃO DE CENAS
         if self.game_over:
             if pygame.time.get_ticks() > self.end_time:
                 if self.tower_cleared:
@@ -148,9 +147,9 @@ class GameplayScene(Scene):
                         self.end_time = pygame.time.get_ticks() + 4000
                 else:
                     self.game.change_scene(MenuScene(self.game))
-            return # <-- IMPORTANTE: Sai do update se o jogo acabou
+            return 
 
-        # --- PARTE 2: LÓGICA DE JOGO ATIVO (QUANDO NÃO É GAME OVER) ---
+        # PARTE 2LÓGICA DE JOGO ATIVO (QUANDO NÃO É GAME OVER) 
         self.player.update()
         self.opponent.update()
         self.action_box.update(pygame.mouse.get_pos())
@@ -162,20 +161,51 @@ class GameplayScene(Scene):
                 if self.pending_opponent:
                     self.pending_opponent = False
                     
-                    # --- IA DO OPONENTE ATUALIZADA ---
-                    opponent_action = random.choice(["physical", "magic", "defend", "heal"])
+                    #  IA DO OPONENTE ATUALIZADA 
+                    chosen_action = None
                     
-                    if opponent_action == "defend" and not self.opponent.is_defending:
-                        self.opponent.defend()
+                    # Regra de Emergência: Curar com vida baixa é prioridade.
+                    # Usamos 35% da vida máxima como gatilho.
+                    if self.opponent.current_health < self.opponent.max_health * 0.35:
+                        # Tem uma chance alta de curar, mas não é 100% garantido para não ser previsível.
+                        if random.random() < 0.8: # 80% de chance de curar
+                             chosen_action = "heal"
+
+                    # Se nenhuma ação de emergência foi escolhida, decide com base na "personalidade".
+                    if not chosen_action:
+                        actions = []
+                        weights = []
+                        
+                        # Personalidade do Mago: Foco em Magia e Cura
+                        if "Mago" in self.opponent.name or "Aprendiz" in self.opponent.name:
+                            actions = ["magic", "heal", "defend", "physical"]
+                            weights = [65, 20, 10, 5] # 65% chance de usar magia, 5% de ataque físico
+                        
+                        # Personalidade do Cavaleiro: Foco em Ataque Físico e Defesa
+                        elif "Cavaleiro" in self.opponent.name or "Guarda" in self.opponent.name:
+                            actions = ["physical", "defend", "magic", "heal"]
+                            weights = [55, 30, 10, 5] # 55% de chance de ataque físico, 30% de defesa
+                        
+                        # Personalidade do Assassino (e padrão): Agressivo
+                        else:
+                            actions = ["physical", "magic", "heal", "defend"]
+                            weights = [45, 40, 10, 5] # Focado em atacar, raramente defende
+
+                        chosen_action = random.choices(actions, weights, k=1)[0]
+
+                    # Executa a ação escolhida.
+                    print(f"IA ({self.opponent.name}) escolheu: {chosen_action}") 
+                    
+                    if chosen_action == "defend":
+                        if not self.opponent.is_defending: self.opponent.defend()
                         self.perform_action("defend", self.opponent, self.player)
-                    elif opponent_action == "heal" and self.opponent.current_health < 50:
+                    elif chosen_action == "heal":
                         self.opponent.heal()
                         self.perform_action("heal", self.opponent, self.player)
-                    else:
-                        opponent_attack = random.choice(["physical", "magic"])
-                        self.perform_action(opponent_attack, self.opponent, self.player)
-
-                elif not self.is_player_turn:
+                    else: # Se a ação for "physical" ou "magic"
+                        self.perform_action(chosen_action, self.opponent, self.player)
+                        
+            elif not self.is_player_turn:
                     self.is_player_turn = True
                     self.turn_text = self.font.render("Seu Turno", True, (255, 255, 255))
 

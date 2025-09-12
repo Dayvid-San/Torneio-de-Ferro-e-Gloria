@@ -5,7 +5,8 @@ CHARACTER_DATA = {
     "Assassino": {
         "description": "Henrique, naufrago nas praias do condado e capturado roubando uma lorde, esse estrangeiro foi tomado como prisioneiro e agora luta por sua liberdade, na arena.",
         "icon_path": "public/IconesJogo/assassino.jpeg",
-        "stats": {"physical": 25, "magic": 15, "heal": 4, "defense": 8},
+        "stats": {"physical": 38, "magic": 15, "heal": 11, "defense": 8},
+         "perfect_block_chance": 0.40,
         "animations": {
             "idle": ["public/moveChar/right_assassino_idle_1.png", "public/moveChar/right_assassino_idle_2.png"],
             "physical": ["public/moveChar/right_assassino_ataque_fisico_1.png", "public/moveChar/right_assassino_ataque_fisico_2.png"],
@@ -15,7 +16,8 @@ CHARACTER_DATA = {
     "Cavaleiro": {
         "description": "Sula, o fracassado e desertor na batalha dos sete exércitos. Sula busca o perdão prometido em vitória na arena.",
         "icon_path": "public/IconesJogo/cavaleiro.jpeg",
-        "stats": {"physical": 30, "magic": 10, "heal": 4, "defense": 8},
+        "stats": {"physical": 30, "magic": 10, "heal": 16, "defense": 8},
+        "perfect_block_chance": 0.60, 
         "animations": {
             "idle": ["public/moveChar/right_cavaleiro_idle_1.png", "public/moveChar/right_cavaleiro_idle_2.png"],
             "physical": ["public/moveChar/right_cavaleiro_ataque_fisico_1.png", "public/moveChar/right_cavaleiro_ataque_fisico_2.png"],
@@ -25,7 +27,8 @@ CHARACTER_DATA = {
     "Mago": {
         "description": "Arnabin, um velho sábio (ou louco) do novo continente. Ele se diverte com seus experimentos em humanos e procura se entreter na arena.",
         "icon_path": "public/IconesJogo/mago.jpeg",
-        "stats": {"physical": 10, "magic": 35, "heal": 4, "defense": 8},
+        "stats": {"physical": 10, "magic": 32, "heal": 20, "defense": 8},
+        "perfect_block_chance": 0.20, 
         "animations": {
             "idle": ["public/moveChar/right_mago_idle_1.png", "public/moveChar/right_mago_idle_2.png"],
             "physical": ["public/moveChar/right_mago_ataque_fisico_1.png", "public/moveChar/right_mago_ataque_fisico_2.png"],

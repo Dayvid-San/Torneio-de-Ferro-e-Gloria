@@ -1,7 +1,5 @@
-# Game/entities/character.py
-import pygame
 from Game.ui.animations import Animation
-
+import random 
 class Character:
     def __init__(self, name, data, is_flipped=False):
         self.name = name
@@ -30,15 +28,24 @@ class Character:
         else:
             # Se uma animação de ação não existir, volta para idle
             self.current_animation = self.animations['idle']
-
+       
     def take_damage(self, amount):
         damage_taken = amount
+        
         if self.is_defending:
-            defense_value = self.stats.get("defense", 0)
-            damage_taken = max(0, amount - defense_value) # Garante que o dano não seja negativo
-            print(f"{self.name} defendeu {defense_value} de dano!")
-            self.is_defending = False # A defesa é consumida após um ataque
-
+           
+            block_chance = self.stats.get("perfect_block_chance", 0)
+            if random.random() < block_chance: # random.random() gera um número entre 0.0 e 1.0
+                print(f"BLOQUEIO PERFEITO! {self.name} não sofreu dano!")
+                damage_taken = 0
+            else:
+                # Se não houve bloqueio perfeito, aplica a defesa normal
+                defense_value = self.stats.get("defense", 0)
+                damage_taken = max(0, amount - defense_value)
+                print(f"{self.name} defendeu {defense_value} de dano!")
+            
+            self.is_defending = False
+        
         self.current_health = max(0, self.current_health - damage_taken)
         print(f"{self.name} tomou {damage_taken} de dano, vida restante: {self.current_health}")
 
