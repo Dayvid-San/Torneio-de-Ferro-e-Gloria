@@ -1,77 +1,68 @@
-# Game/ui/action_box.py
 import pygame
 
 class ActionBox:
     def __init__(self, x, y, width, height, options, font):
-        self.rect = pygame.Rect(x, y, width, height)
-        self.options = options
-        self.font = font
-        self.active = True
-        self.hovered_index = -1  # -1 significa que nenhuma opção está sob o mouse
-        self.border_color = (255, 255, 255)
-        self.bg_color = (0, 0, 0)
-        self.text_color_normal = (200, 200, 200)
-        self.text_color_hover = (255, 255, 0) # Dourado para destacar
-        self.padding = 20
+        self.__rect = pygame.Rect(x, y, width, height)
+        self.__options = options
+        self.__font = font
+        self.__active = True
+        self.__hovered_index = -1 
+        self.__border_color = (255, 255, 255)
+        self.__bg_color = (0, 0, 0)
+        self.__text_color_normal = (200, 200, 200)
+        self.__text_color_hover = (255, 255, 0)  
+        self.__padding = 20
 
         self._prepare_options()
 
     def _prepare_options(self):
-        """Pré-calcula as áreas de clique e renderiza os textos."""
-        self.rendered_options = []
-        self.option_rects = []
+        self.__rendered_options = []
+        self.__option_rects = []
         
-        option_width = self.rect.width / len(self.options)
+        option_width = self.__rect.width / len(self.__options)
         
-        for i, option_text in enumerate(self.options):
-            # Renderiza o texto para as duas cores (normal e hover)
-            surf_normal = self.font.render(option_text, True, self.text_color_normal)
-            surf_hover = self.font.render(option_text, True, self.text_color_hover)
-            self.rendered_options.append({"normal": surf_normal, "hover": surf_hover})
+        for i, option_text in enumerate(self.__options):
+            surf_normal = self.__font.render(option_text, True, self.__text_color_normal)
+            surf_hover = self.__font.render(option_text, True, self.__text_color_hover)
+            self.__rendered_options.append({"normal": surf_normal, "hover": surf_hover})
 
-            # Calcula a área de clique para esta opção
-            pos_x = self.rect.x + (i * option_width)
-            rect = pygame.Rect(pos_x, self.rect.y, option_width, self.rect.height)
-            self.option_rects.append(rect)
+            pos_x = self.__rect.x + (i * option_width)
+            rect = pygame.Rect(pos_x, self.__rect.y, option_width, self.__rect.height)
+            self.__option_rects.append(rect)
 
     def update(self, mouse_pos):
-        if not self.active:
-            self.hovered_index = -1
+        if not self.__active:
+            self.__hovered_index = -1
             return
 
-        for i, rect in enumerate(self.option_rects):
+        for i, rect in enumerate(self.__option_rects):
             if rect.collidepoint(mouse_pos):
-                self.hovered_index = i
+                self.__hovered_index = i
                 return
-        self.hovered_index = -1
+        self.__hovered_index = -1
 
     def handle_click(self, event):
-        
-        if not self.active or event.type != pygame.MOUSEBUTTONDOWN or self.hovered_index == -1:
+        if not self.__active or event.type != pygame.MOUSEBUTTONDOWN or self.__hovered_index == -1:
             return None
 
-        # Confirma que o clique foi em cima da opção destacada
-        if self.option_rects[self.hovered_index].collidepoint(event.pos):
-            return self.options[self.hovered_index]
+        if self.__option_rects[self.__hovered_index].collidepoint(event.pos):
+            return self.__options[self.__hovered_index]
         
         return None
 
     def draw(self, screen):
-        #Desenha a caixa, as opções e o efeito de hover
-        if not self.active:
+        if not self.__active:
             return
 
-        pygame.draw.rect(screen, self.bg_color, self.rect)
-        pygame.draw.rect(screen, self.border_color, self.rect, 2)
+        pygame.draw.rect(screen, self.__bg_color, self.__rect)
+        pygame.draw.rect(screen, self.__border_color, self.__rect, 2)
 
-        for i, rendered in enumerate(self.rendered_options):
-            # Escolhe qual superfície de texto desenhar (normal ou hover)
-            if i == self.hovered_index:
+        for i, rendered in enumerate(self.__rendered_options):
+            if i == self.__hovered_index:
                 text_surf = rendered["hover"]
             else:
                 text_surf = rendered["normal"]
             
-            # Centraliza o texto dentro da sua área de opção
-            option_rect = self.option_rects[i]
+            option_rect = self.__option_rects[i]
             text_rect = text_surf.get_rect(center=option_rect.center)
             screen.blit(text_surf, text_rect)
