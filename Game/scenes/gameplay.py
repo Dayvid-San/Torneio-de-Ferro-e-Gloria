@@ -5,6 +5,11 @@ from Game.ui.button import Button
 from Game.scenes.scenes import Scene
 from Game.scenes.menu import MenuScene
 
+from personagem import Personagem
+from mago import Mago
+from cavaleiro import Cavaleiro
+from assasino import Assasino
+
 class GameplayScene(Scene):
     def __init__(self, game):
         super().__init__(game)
@@ -28,15 +33,21 @@ class GameplayScene(Scene):
             self.background.fill((0, 0, 0))
 
         # Personagens disponíveis e stats
+
+        Personagem_Assasino = Assasino(25,15)
+        Personagem_Cavaleiro = Cavaleiro(30,10)
+        Personagem_Mago = Mago(10,35)
+
+
         self.characters = ["Assassino", "Cavaleiro", "Mago"]
         self.character_stats = {
-            "Assassino": {"physical": 25, "magic": 15, "idle_paths": ["public/moveChar/right_assassino_idle_1.png", "public/moveChar/right_assassino_idle_2.png"],
+            "Assassino": {"physical": Personagem_Assasino.getFisica(), "magic": Personagem_Assasino.getMagia(), "idle_paths": ["public/moveChar/right_assassino_idle_1.png", "public/moveChar/right_assassino_idle_2.png"],
                           "physical_paths": ["public/moveChar/right_assassino_ataque_fisico_1.png", "public/moveChar/right_assassino_ataque_fisico_2.png"],
                           "magic_paths": ["public/moveChar/right_assassino_magico_1.png", "public/moveChar/right_assassino_magico_2.png"]},
-            "Cavaleiro": {"physical": 30, "magic": 10, "idle_paths": ["public/moveChar/right_cavaleiro_idle_1.png", "public/moveChar/right_cavaleiro_idle_2.png"],
+            "Cavaleiro": {"physical": Personagem_Cavaleiro.getFisica(), "magic": Personagem_Cavaleiro.getMagia(), "idle_paths": ["public/moveChar/right_cavaleiro_idle_1.png", "public/moveChar/right_cavaleiro_idle_2.png"],
                           "physical_paths": ["public/moveChar/right_cavaleiro_ataque_fisico_1.png", "public/moveChar/right_cavaleiro_ataque_fisico_2.png"],
                           "magic_paths": ["public/moveChar/right_cavaleiro_magico_1.png", "public/moveChar/right_cavaleiro_magico_2.png"]},
-            "Mago": {"physical": 10, "magic": 35, "idle_paths": ["public/moveChar/right_mago_idle_1.png", "public/moveChar/right_mago_idle_2.png"],
+            "Mago": {"physical": Personagem_Mago.getFisica(), "magic": Personagem_Mago.getMagia(), "idle_paths": ["public/moveChar/right_mago_idle_1.png", "public/moveChar/right_mago_idle_2.png"],
                      "physical_paths": ["public/moveChar/right_mago_ataque_fisico_1.png", "public/moveChar/right_mago_ataque_fisico_2.png"],
                      "magic_paths": ["public/moveChar/right_mago_magico_1.png", "public/moveChar/right_mago_magico_2.png"]}
         }
