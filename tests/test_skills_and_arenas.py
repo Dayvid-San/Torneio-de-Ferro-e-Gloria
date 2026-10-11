@@ -33,12 +33,12 @@ def test_shield_stance_deals_no_damage_and_raises_defense_for_two_enemy_turns():
     b = battle(knight, Assassin())
     e = b.act(ActionType.SKILL)
     assert e.damage == 0 and not e.crit and e.effects == ("Escudo",)
-    assert knight.defense_against(ActionType.PHYSICAL) == 8 + 6
-    b.act(ActionType.PHYSICAL)            # 1º turno do oponente sob escudo: 25 - 14 = 11
-    assert b.history[-1].damage == 11
+    assert knight.defense_against(ActionType.PHYSICAL) == 8 + 9
+    b.act(ActionType.PHYSICAL)            # 1º turno do oponente sob escudo: 25 - 17 = 8
+    assert b.history[-1].damage == 8
     b.act(ActionType.PHYSICAL)            # turno do cavaleiro (escudo ainda ativo)
     b.act(ActionType.PHYSICAL)            # 2º turno do oponente: ainda protegido
-    assert b.history[-1].damage == 11
+    assert b.history[-1].damage == 8
     b.act(ActionType.PHYSICAL)            # cavaleiro age; escudo expira ao fim deste turno
     assert not knight.has_effect(EffectKind.DEFENSE_UP)
     b.act(ActionType.PHYSICAL)
@@ -129,3 +129,47 @@ def test_tournament_assigns_an_arena_per_round_without_early_repeats():
     assert t.current_arena == t.arenas[0]
     t.record(True)
     assert t.current_arena == t.arenas[1]
+
+
+# --- novos personagens ---------------------------------------------------
+def test_piercing_arrow_ignores_defense_without_crit():
+    from Game.domain.fighter import Archer
+    b = battle(Archer(), Knight())
+    e = b.act(ActionType.SKILL)
+    assert e.damage == round(26 * 1.3) and not e.crit and e.skill == "Flecha Perfurante"
+
+
+def test_healing_light_heals_capped_and_costs_mana():
+    from Game.domain.fighter import Cleric
+    cleric = Cleric()
+    cleric.take_damage(40)
+    b = battle(cleric, Knight())
+    e = b.act(ActionType.SKILL)
+    assert e.healed == 30 and cleric.hp == 90 and e.damage == 0 and e.mana_spent == 12
+    assert cleric.heal(999) == 10 and cleric.hp == cleric.max_hp  # nunca passa do máximo
+
+
+def test_blood_rage_raises_only_physical_power_for_three_turns():
+    from Game.domain.fighter import Barbarian
+    barb = Barbarian()
+    assert barb.max_hp == 110
+    b = battle(barb, Knight(max_hp=1000))
+    b.act(ActionType.SKILL)
+    assert barb.power(ActionType.PHYSICAL) == 32 + barb.skill.self_effects[0].amount
+    assert barb.power(ActionType.MAGIC) == 5
+    for _ in range(6):  # 3 turnos do bárbaro (e 3 do oponente): o buff expira
+        b.act(ActionType.PHYSICAL)
+    assert not barb.has_effect(EffectKind.ATTACK_UP)
+    assert barb.power(ActionType.PHYSICAL) == 32
+
+
+def test_skill_should_use_heuristics():
+    from Game.domain.fighter import Barbarian, Cleric
+    cleric = Cleric()
+    assert not cleric.skill.should_use(cleric)      # vida cheia: não cura
+    cleric.take_damage(60)
+    assert cleric.skill.should_use(cleric)
+    barb = Barbarian()
+    assert barb.skill.should_use(barb)
+    barb.add_effect(barb.skill.self_effects[0])
+    assert not barb.skill.should_use(barb)          # buff já ativo

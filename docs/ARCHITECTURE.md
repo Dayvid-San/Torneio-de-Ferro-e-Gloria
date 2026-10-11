@@ -66,8 +66,11 @@ Controles: mouse ou `1`/`F` físico, `2` magia (na luta); `Enter`/`Espaço` conf
   qualquer combinação de dano / crítico garantido / ignorar defesa / efeitos em si / efeitos no alvo, então uma
   skill nova não exige código de combate. Tem cooldown (turnos próprios) e pode custar mana.
   - Assassino — *Golpe Furtivo*: físico, crítico garantido, ignora defesa; cooldown 3.
-  - Cavaleiro — *Postura de Escudo*: sem dano, +6 de defesa por 2 turnos do oponente; cooldown 3.
+  - Cavaleiro — *Postura de Escudo*: sem dano, +9 de defesa por 2 turnos do oponente; cooldown 3.
   - Mago — *Raio Tóxico*: magia a 60% do poder + veneno (5/turno, 3 turnos do portador); 10 mana; cooldown 3.
+  - Arqueiro — *Flecha Perfurante*: físico a 130% do poder, ignora defesa; cooldown 2.
+  - Clérigo — *Luz Curativa*: recupera 30 PV; 12 mana; cooldown 3 (`Skill.self_heal`).
+  - Bárbaro — *Fúria*: sem dano, +10 de poder físico por 3 turnos (`EffectKind.ATTACK_UP`); cooldown 4.
 - **Efeitos de status**: ao fim do turno do portador aplica-se veneno (ignora defesa; pode matar), reduz-se cooldown
   e duração. Reaplicar o mesmo efeito renova.
 - **Arenas** (`Arena`): multiplicador de dano físico/mágico, bônus de crítico, bônus de regeneração de mana e um tom
@@ -75,3 +78,19 @@ Controles: mouse ou `1`/`F` físico, `2` magia (na luta); `Enter`/`Espaço` conf
   até esgotar); no duelo é sorteada. O banner de abertura mostra nome, descrição e efeitos.
 - **IA do oponente** (`HeuristicPolicy`): usa skill de dano sempre que disponível, escudo com vida baixa, poupa
   mana e erra de propósito 25% das vezes (`randomness`).
+
+## Elenco (6 personagens)
+| | PV | Fís/Mag | Def fís/mág | Crítico | Mana |
+|---|---|---|---|---|---|
+| Assassino | 100 | 25/15 | 4/4 | 30% | 30 |
+| Cavaleiro | 100 | 30/10 | 8/2 | 10% | 20 |
+| Mago | 100 | 10/35 | 1/6 | 10% | 30 (magia 15, regen 8) |
+| Arqueiro | 100 | 26/12 | 3/3 | 20% | 25 |
+| Clérigo | 100 | 12/28 | 3/7 | 5% | 40 (magia 12) |
+| Bárbaro | 110 | 32/5 | 2/0 | 15% | 10 |
+
+O torneio sorteia no máximo 4 rodadas (uma por arena) entre os 5 oponentes possíveis.
+**Arte de Arqueiro, Clérigo e Bárbaro é provisória**: sprites recoloridos e reduzidos por
+`tools/make_placeholder_sprites.py`. Para trocar, sobrescreva os PNGs com os mesmos nomes
+(`right_<slug>_<idle|ataque_fisico|magico>_<1|2>.png`, `public/IconesJogo/<slug>.jpeg`). O sprite
+mágico do Bárbaro herda o fundo opaco do sprite mágico do Cavaleiro (defeito do arquivo original).

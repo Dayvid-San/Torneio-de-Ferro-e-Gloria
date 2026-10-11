@@ -49,7 +49,7 @@ def start_tournament(game, char="cavaleiro"):
 def test_tournament_flow_ends_in_result_with_next_action(game, monkeypatch):
     start_tournament(game)
     scene = game.scene
-    assert game.tournament is not None and scene.round_label == "Rodada 1/2"
+    assert game.tournament is not None and scene.round_label == f"Rodada 1/{game.tournament.total_rounds}"
     assert scene.defs[Side.PLAYER].id == "cavaleiro"
     assert scene.defs[Side.OPPONENT].id == game.tournament.opponents[0]
 
@@ -62,7 +62,7 @@ def test_tournament_flow_ends_in_result_with_next_action(game, monkeypatch):
     assert "next" in result.actions and game.tournament.round_number == 2
 
     game.step(click(result.actions["next"].rect.center), DT)
-    assert game.scene.round_label == "Rodada 2/2"
+    assert game.scene.round_label == f"Rodada 2/{game.tournament.total_rounds}"
     assert game.scene.defs[Side.OPPONENT].id == game.tournament.opponents[1]
 
 
@@ -148,3 +148,11 @@ def test_skill_button_and_hotkey_use_class_skill_then_enter_cooldown(game):
 def test_arena_and_tournament_arena_are_used_by_gameplay(game):
     start_tournament(game)
     assert game.scene.arena.id == game.tournament.current_arena
+
+
+def test_log_text_for_heal_at_full_hp_is_not_empty(game):
+    game.selected_character_id = "clerigo"
+    game.go_to("gameplay", opponent_id="barbaro", arena_id="coliseu")
+    game.step([pygame.event.Event(pygame.KEYDOWN, key=pygame.K_3)], DT)
+    assert game.scene.last_event.healed == 0  # vida cheia: nada a curar
+    run(game, 0.1)  # desenha o log sem erro

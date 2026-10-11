@@ -1,6 +1,7 @@
 from Game.domain.actions import ActionType
 from Game.domain.effects import ActiveEffect, Effect, EffectKind
-from Game.domain.skills import FURTIVE_STRIKE, SHIELD_STANCE, TOXIC_BOLT, Skill
+from Game.domain.skills import (BLOOD_RAGE, FURTIVE_STRIKE, HEALING_LIGHT, PIERCING_ARROW,
+                                SHIELD_STANCE, TOXIC_BOLT, Skill)
 
 
 class Fighter:
@@ -111,7 +112,10 @@ class Fighter:
             skill = self.SKILL
             return round(self.power(skill.damage_action) * skill.power_mult) \
                 if skill and skill.damage_action else 0
-        return self.__physical if action is ActionType.PHYSICAL else self.__magic
+        if action is ActionType.PHYSICAL:
+            rage = self.__effects.get(EffectKind.ATTACK_UP)
+            return self.__physical + (rage.effect.amount if rage else 0)
+        return self.__magic
 
     def defense_against(self, action: ActionType) -> int:
         if action is ActionType.SKILL:
@@ -141,6 +145,12 @@ class Fighter:
         dealt = min(max(0, amount), self.__hp)
         self.__hp -= dealt
         return dealt
+
+    def heal(self, amount: int) -> int:
+        """Recupera PV (até o máximo) e devolve quanto foi realmente curado."""
+        healed = min(max(0, amount), self.__max_hp - self.__hp)
+        self.__hp += healed
+        return healed
 
     def spend_mana(self, amount: int) -> None:
         if amount > self.__mana:
@@ -199,3 +209,32 @@ class Mage(Fighter):
     MANA_REGEN = 8
     SKILL = TOXIC_BOLT
     CATCHPHRASE = "Eu sou dos magos, o mais poderoso"
+
+
+class Archer(Fighter):
+    DEFAULT_PHYSICAL, DEFAULT_MAGIC = 26, 12
+    DEFAULT_PHYSICAL_DEFENSE, DEFAULT_MAGIC_DEFENSE = 3, 3
+    DEFAULT_CRIT_CHANCE = 0.20
+    DEFAULT_MAX_MANA = 25
+    SKILL = PIERCING_ARROW
+    CATCHPHRASE = "Minha flecha já encontrou o seu nome"
+
+
+class Cleric(Fighter):
+    DEFAULT_PHYSICAL, DEFAULT_MAGIC = 12, 28
+    DEFAULT_PHYSICAL_DEFENSE, DEFAULT_MAGIC_DEFENSE = 3, 7
+    DEFAULT_CRIT_CHANCE = 0.05
+    DEFAULT_MAX_MANA = 40
+    MAGIC_COST = 12
+    SKILL = HEALING_LIGHT
+    CATCHPHRASE = "A luz também sabe ferir"
+
+
+class Barbarian(Fighter):
+    DEFAULT_HP = 110
+    DEFAULT_PHYSICAL, DEFAULT_MAGIC = 32, 5
+    DEFAULT_PHYSICAL_DEFENSE, DEFAULT_MAGIC_DEFENSE = 2, 0
+    DEFAULT_CRIT_CHANCE = 0.15
+    DEFAULT_MAX_MANA = 10
+    SKILL = BLOOD_RAGE
+    CATCHPHRASE = "Meu clã bebe do seu sangue!"

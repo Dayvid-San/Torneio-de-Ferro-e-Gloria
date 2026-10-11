@@ -42,3 +42,10 @@ def test_cannot_record_after_end():
 def test_needs_opponent():
     with pytest.raises(ValueError):
         Tournament("mago", ["mago"])
+
+
+def test_max_rounds_caps_opponents_and_arenas():
+    ids = ["a", "b", "c", "d", "e", "f"]
+    t = Tournament("a", ids, random.Random(1), ["x", "y", "z", "w"], max_rounds=4)
+    assert t.total_rounds == len(t.opponents) == len(t.arenas) == 4
+    assert "a" not in t.opponents and set(t.arenas) == {"x", "y", "z", "w"}
