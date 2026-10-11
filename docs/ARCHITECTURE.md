@@ -16,9 +16,11 @@ Game/
     battle.py        Battle: máquina de estados de turnos, histórico de BattleEvent
     damage.py        calculate_damage (poder x crítico -> modificadores -> defesa) + DamageModifier
     ai.py            Policy: RandomPolicy, GreedyPolicy
+    tournament.py    Tournament: chaveamento de eliminação (jogador vs. todos os demais)
     actions.py       ActionType, Side
   data/characters.py CharacterDef: conteúdo (nome, lore, sprites) separado da lógica
-  scenes/            apresentação: menu, character_select, gameplay (registro por nome)
+  audio.py           música e efeitos (no-op se não houver dispositivo/arquivo)
+  scenes/            menu, character_select, gameplay, result (registro por nome)
   ui/                Button, Animation (por dt), texto, barra de vida
 tests/ tools/        harness (ver HARNESS.md)
 ```
@@ -49,3 +51,9 @@ tests/ tools/        harness (ver HARNESS.md)
 - Mana: Magia custa `MAGIC_COST`; ataque físico é grátis; `MANA_REGEN` ao fim de cada turno próprio.
   Sem mana, `legal_actions()` exclui a magia (UI desabilita o botão; policies respeitam; `Battle.act` levanta `IllegalAction`).
 - Atributos: Assassino 25/15, def 4/4, crit 30%, mana 30 · Cavaleiro 30/10, def 8/2, crit 10%, mana 20 · Mago 10/35, def 1/6, crit 10%, mana 30 (custo 15, regen 8).
+
+## Fluxo de jogo
+Menu → **Torneio** (rodadas contra cada outro lutador; derrota elimina) ou **Duelo Rápido**
+→ seleção (hover mostra atributos) → luta → resultado (próxima luta / revanche / novo torneio / menu).
+Controles: mouse ou `1`/`F` físico, `2` magia (na luta); `Enter`/`Espaço` confirma no resultado;
+`Esc` volta; `M` liga/desliga o som.

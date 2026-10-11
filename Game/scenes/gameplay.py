@@ -23,6 +23,9 @@ class GameplayScene(Scene):
         super().__init__(game)
         assets = game.assets
         player_id = player_id or game.selected_character_id or "assassino"
+        tournament = game.tournament if game.mode == "torneio" else None
+        if opponent_id is None and tournament and tournament.current_opponent:
+            opponent_id = tournament.current_opponent
         if opponent_id is None:
             opponent_id = game.rng.choice([c for c in CHARACTERS if c != player_id])
         self.defs: dict[Side, CharacterDef] = {
@@ -35,10 +38,18 @@ class GameplayScene(Scene):
         self.background = assets.image("public/fundo.jpeg", game.screen.get_size(), alpha=False)
         w, h = game.screen.get_size()
         self.width, self.height = w, h
+        cost = self.battle.fighter(Side.PLAYER).cost(ActionType.MAGIC)
         self.buttons = {
-            ActionType.PHYSICAL: Button(w // 3 - 75, h - 100, 150, 50, "Ataque Físico", self.font),
-            ActionType.MAGIC: Button(2 * w // 3 - 75, h - 100, 150, 50, "Magia", self.font),
+            ActionType.PHYSICAL: Button(w // 3 - 90, h - 100, 180, 50, "Físico [1]", self.font),
+            ActionType.MAGIC: Button(2 * w // 3 - 90, h - 100, 180, 50,
+                                     f"Magia [2] -{cost}", self.font),
         }
+        self.hotkeys = {pygame.K_1: ActionType.PHYSICAL, pygame.K_f: ActionType.PHYSICAL,
+                        pygame.K_2: ActionType.MAGIC}
+        self.floaters: list[dict] = []  # números de dano flutuantes
+        self.small_font = assets.font(30)
+        self.round_label = (f"Rodada {tournament.round_number}/{tournament.total_rounds}"
+                            if tournament else "Duelo Rápido")
         self.animations = {side: self._animation(side, "idle") for side in Side}
         self.phase = INPUT
         self.timer = 0.0
@@ -65,7 +76,16 @@ class GameplayScene(Scene):
         self.last_event = event
         kind = "physical" if event.action is ActionType.PHYSICAL else "magic"
         self.animations[event.actor] = self._animation(event.actor, kind)
+        self.game.audio.play("attack")
+        self.game.audio.play("hit")
+        x = self._x(event.target) + 100
+        text = f"{event.damage}!" if event.crit else str(event.damage)
+        self.floaters.append({"text": text, "x": x, "y": self.height // 2 - 90, "age": 0.0,
+                              "color": (255, 215, 0) if event.crit else WHITE})
         self.phase, self.timer = ACTING, config.ACTION_DELAY
+
+    def _x(self, side: Side) -> int:
+        return self.width // 4 - 100 if side is Side.PLAYER else 3 * self.width // 4 - 100
 
     def handle_events(self, events):
         for event in events:
@@ -74,6 +94,11 @@ class GameplayScene(Scene):
                 return
             if self.phase != INPUT:
                 continue
+            if event.type == pygame.KEYDOWN and event.key in self.hotkeys:
+                action = self.hotkeys[event.key]
+                if action in self.battle.legal_actions(Side.PLAYER):
+                    self.perform(action)
+                    return
             for action, button in self.buttons.items():
                 if button.was_clicked(event):
                     self.perform(action)
@@ -82,6 +107,9 @@ class GameplayScene(Scene):
     def update(self, dt):
         for anim in self.animations.values():
             anim.update(dt)
+        for f in self.floaters:
+            f["age"] += dt
+        self.floaters = [f for f in self.floaters if f["age"] < 1.0]
         mouse = pygame.mouse.get_pos()
         legal = self.battle.legal_actions(Side.PLAYER)
         for action, button in self.buttons.items():
@@ -94,7 +122,7 @@ class GameplayScene(Scene):
         if self.timer > 0:
             return
         if self.phase == ENDED:
-            self.game.go_to("menu")
+            self._finish()
         elif self.battle.is_over:
             self.animations[self.last_event.actor] = self._animation(self.last_event.actor, "idle")
             self.phase, self.timer = ENDED, config.END_DELAY
@@ -105,6 +133,14 @@ class GameplayScene(Scene):
             else:
                 self.phase = INPUT
 
+    def _finish(self) -> None:
+        won = self.battle.winner is Side.PLAYER
+        tournament = self.game.tournament if self.game.mode == "torneio" else None
+        if tournament and not tournament.is_over:
+            tournament.record(won)
+        self.game.go_to("result", won=won, turns=len(self.battle.history),
+                        opponent_id=self.defs[Side.OPPONENT].id)
+
     def draw(self, screen):
         screen.blit(self.background, (0, 0))
         y = self.height // 2
@@ -112,13 +148,17 @@ class GameplayScene(Scene):
         for side in Side:
             fighter = self.battle.fighter(side)
             screen.blit(self.animations[side].frame, (xs[side], y))
-            screen.blit(self.font.render(self._name(side), True, WHITE), (xs[side], y - 70))
+            screen.blit(self.font.render(self._name(side), True, WHITE), (xs[side], y - 85))
             draw_health_bar(screen, xs[side], y - 50, fighter.hp, fighter.max_hp)
             draw_mana_bar(screen, xs[side], y - 26, fighter.mana, fighter.max_mana)
 
         if self.phase == INPUT:
             for button in self.buttons.values():
                 button.draw(screen)
+        for f in self.floaters:
+            label = self.font.render(f["text"], True, f["color"])
+            screen.blit(label, label.get_rect(center=(f["x"], f["y"] - int(60 * f["age"]))))
+        screen.blit(self.small_font.render(self.round_label, True, WHITE), (10, 10))
 
         color = WHITE
         if self.battle.is_over:

@@ -5,7 +5,7 @@ from Game.config import GREY, WHITE
 
 class Button:
     def __init__(self, x, y, width, height, text, font,
-                 color=GREY, hover_color=WHITE, text_color=WHITE):
+                 color=GREY, hover_color=WHITE, text_color=(20, 20, 20)):
         self.rect = pygame.Rect(x, y, width, height)
         self.color = color
         self.hover_color = hover_color

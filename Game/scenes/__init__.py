@@ -5,6 +5,7 @@ import importlib
 _REGISTRY = {
     "menu": ("Game.scenes.menu", "MenuScene"),
     "character_select": ("Game.scenes.character_select", "CharacterSelectScene"),
+    "result": ("Game.scenes.result", "ResultScene"),
     "gameplay": ("Game.scenes.gameplay", "GameplayScene"),
 }
 

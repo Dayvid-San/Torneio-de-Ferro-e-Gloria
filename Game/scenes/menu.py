@@ -11,16 +11,32 @@ class MenuScene(Scene):
         font = game.assets.font(40)
         self.background = game.assets.image(
             "public/torneio_ferro_e_sangue.png", game.screen.get_size(), alpha=False)
-        self.play_button = Button(300, 250, 200, 60, "Jogadores", font, GREY, WHITE)
+        labels = {"torneio": "Torneio", "duelo": "Duelo Rápido", "sair": "Sair"}
+        self.buttons = {
+            key: Button(280, 230 + i * 80, 240, 60, text, font, GREY, WHITE)
+            for i, (key, text) in enumerate(labels.items())
+        }
+        self.hint = game.assets.font(24).render("M: som on/off", True, WHITE)
 
     def handle_events(self, events):
         for event in events:
-            if self.play_button.was_clicked(event):
-                self.game.go_to("character_select")
+            for key, button in self.buttons.items():
+                if not button.was_clicked(event):
+                    continue
+                if key == "sair":
+                    self.game.running = False
+                else:
+                    self.game.mode = key
+                    self.game.go_to("character_select")
+                return
 
     def update(self, dt):
-        self.play_button.update_hover(pygame.mouse.get_pos())
+        mouse = pygame.mouse.get_pos()
+        for button in self.buttons.values():
+            button.update_hover(mouse)
 
     def draw(self, screen):
         screen.blit(self.background, (0, 0))
-        self.play_button.draw(screen)
+        for button in self.buttons.values():
+            button.draw(screen)
+        screen.blit(self.hint, (10, screen.get_height() - 30))

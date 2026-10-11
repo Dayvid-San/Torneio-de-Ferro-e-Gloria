@@ -5,6 +5,7 @@ import pygame
 
 from Game import config
 from Game.assets import Assets
+from Game.audio import Audio
 from Game.scenes import create_scene
 
 
@@ -21,9 +22,14 @@ class Game:
         pygame.display.set_caption(config.TITLE)
         self.clock = pygame.time.Clock()
         self.assets = Assets()
+        self.audio = Audio()
+        if not headless:
+            self.audio.start_music()
         self.rng = random.Random(seed)
         self.running = True
         self.selected_character_id: str | None = None
+        self.mode = "torneio"  # torneio | duelo
+        self.tournament = None
         self.scene = None
         self.go_to("menu")
 
@@ -34,6 +40,8 @@ class Game:
         for event in events:
             if event.type == pygame.QUIT:
                 self.running = False
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_m:
+                self.audio.toggle_mute()
         self.scene.handle_events(events)
         self.scene.update(dt)
         self.scene.draw(self.screen)

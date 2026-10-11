@@ -4,6 +4,8 @@ from Game.config import GREY, WHITE
 from Game.data.characters import CHARACTERS
 from Game.scenes.base import Scene
 from Game.ui.button import Button
+from Game.domain.actions import ActionType
+from Game.domain.tournament import Tournament
 from Game.ui.text import wrap_text
 
 
@@ -24,8 +26,11 @@ class CharacterSelectScene(Scene):
         self._description: list[pygame.Surface] = []
 
     def select(self, char_id: str) -> None:
-        self.game.selected_character_id = char_id
-        self.game.go_to("gameplay")
+        game = self.game
+        game.selected_character_id = char_id
+        game.tournament = (Tournament(char_id, list(CHARACTERS), game.rng)
+                           if game.mode == "torneio" else None)
+        game.go_to("gameplay")
 
     def handle_events(self, events):
         for event in events:
@@ -46,9 +51,17 @@ class CharacterSelectScene(Scene):
                 hovered = cid
         if hovered != self.hovered_id:
             self.hovered_id = hovered
-            self._description = (
-                wrap_text(CHARACTERS[hovered].lore, self.small_font, WHITE, 400)
-                if hovered else [])
+            self._description = self._describe(hovered) if hovered else []
+
+    def _describe(self, char_id: str) -> list[pygame.Surface]:
+        c = CHARACTERS[char_id]
+        f = c.create()
+        stats = (f"PV {f.max_hp}  Fís {f.physical}  Mag {f.magic}  "
+                 f"Def {f.physical_defense}/{f.magic_defense}  "
+                 f"Crít {f.crit_chance:.0%}  Mana {f.max_mana} (Magia {f.cost(ActionType.MAGIC)})")
+        gold = (255, 215, 0)
+        return (wrap_text(stats, self.small_font, gold, 400)
+                + wrap_text(c.lore, self.small_font, WHITE, 400))
 
     def _draw_text_box(self, screen, lines, x, y, padding=10):
         line_h = self.small_font.get_linesize()
