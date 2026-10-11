@@ -11,12 +11,15 @@ class Button:
         self.hover_color = hover_color
         self.hovered = False
         self.pressed = False
+        self.enabled = True
         self._label = font.render(text, True, text_color)
 
     def update_hover(self, mouse_pos) -> None:
-        self.hovered = self.rect.collidepoint(mouse_pos)
+        self.hovered = self.enabled and self.rect.collidepoint(mouse_pos)
 
     def was_clicked(self, event) -> bool:
+        if not self.enabled:
+            return False
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if self.rect.collidepoint(event.pos):
                 self.pressed = True
@@ -26,7 +29,9 @@ class Button:
         return False
 
     def draw(self, screen) -> None:
-        if self.pressed:
+        if not self.enabled:
+            color = (90, 90, 90)
+        elif self.pressed:
             color = tuple(max(0, c - 50) for c in self.color)
         else:
             color = self.hover_color if self.hovered else self.color

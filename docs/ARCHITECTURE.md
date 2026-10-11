@@ -12,9 +12,9 @@ Game/
   config.py          constantes e tempos
   assets.py          cache de imagens/fontes + placeholder se faltar arquivo
   domain/            REGRAS (puro Python, sem pygame)
-    fighter.py       Fighter + Assassin/Knight/Mage (herança, encapsulamento, polimorfismo)
+    fighter.py       Fighter (HP, ataque, defesa, crítico, mana) + Assassin/Knight/Mage
     battle.py        Battle: máquina de estados de turnos, histórico de BattleEvent
-    damage.py        calculate_damage + ganchos DamageModifier
+    damage.py        calculate_damage (poder x crítico -> modificadores -> defesa) + DamageModifier
     ai.py            Policy: RandomPolicy, GreedyPolicy
     actions.py       ActionType, Side
   data/characters.py CharacterDef: conteúdo (nome, lore, sprites) separado da lógica
@@ -42,3 +42,10 @@ tests/ tools/        harness (ver HARNESS.md)
 - Tempo por `dt` em vez de `get_ticks`/`clock.tick` duplicado.
 - Dados dos personagens deixaram de estar duplicados em 3 lugares (stats, caminhos de sprite, lore).
 - Removidos pacotes `utills/`, `managers/` (código duplicado) e 3 PNGs idênticos (`* copy.png`).
+
+## Regras de combate
+- Dano = `poder` (x1,5 se crítico) → modificadores → menos defesa do alvo (física ou mágica), mínimo 1.
+- Crítico: sorteado em `Battle` com o `rng` injetado, chance por classe (`crit_chance`).
+- Mana: Magia custa `MAGIC_COST`; ataque físico é grátis; `MANA_REGEN` ao fim de cada turno próprio.
+  Sem mana, `legal_actions()` exclui a magia (UI desabilita o botão; policies respeitam; `Battle.act` levanta `IllegalAction`).
+- Atributos: Assassino 25/15, def 4/4, crit 30%, mana 30 · Cavaleiro 30/10, def 8/2, crit 10%, mana 20 · Mago 10/35, def 1/6, crit 10%, mana 30 (custo 15, regen 8).

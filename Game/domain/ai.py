@@ -9,18 +9,20 @@ class Policy(Protocol):
 
 
 class RandomPolicy:
-    """Comportamento original do oponente: escolhe ao acaso."""
+    """Escolhe ao acaso entre as ações que a mana permite."""
 
     def __init__(self, rng: random.Random | None = None):
         self.rng = rng or random.Random()
 
     def choose(self, battle, side) -> ActionType:
-        return self.rng.choice(list(ActionType))
+        return self.rng.choice(battle.legal_actions(side))
 
 
 class GreedyPolicy:
-    """Sempre usa o ataque mais forte. Útil como baseline de balanceamento."""
+    """Sempre usa a ação de maior dano líquido (já descontada a defesa do alvo),
+    ignorando custo de mana futuro. Baseline de pior caso para balanceamento."""
 
     def choose(self, battle, side) -> ActionType:
-        me = battle.fighter(side)
-        return max(ActionType, key=me.power)
+        me, foe = battle.fighter(side), battle.fighter(side.other)
+        return max(battle.legal_actions(side),
+                   key=lambda a: me.power(a) - foe.defense_against(a))

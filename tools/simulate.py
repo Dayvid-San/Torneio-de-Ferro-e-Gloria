@@ -21,7 +21,7 @@ POLICIES = {"random": lambda rng: RandomPolicy(rng), "greedy": lambda rng: Greed
 
 def fight(a_id, b_id, rng, policy_name, first=Side.PLAYER):
     battle = Battle(CHARACTERS[a_id].create(), CHARACTERS[b_id].create(), first=first,
-                    policy=POLICIES[policy_name](rng))
+                    policy=POLICIES[policy_name](rng), rng=rng)
     while not battle.is_over:
         battle.act()  # ambos usam a mesma policy: mede o poder do personagem
     return battle.winner, battle.turn_number - 1

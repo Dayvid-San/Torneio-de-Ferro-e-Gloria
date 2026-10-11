@@ -9,7 +9,7 @@ from Game.domain.battle import Battle, BattleEvent
 from Game.scenes.base import Scene
 from Game.ui.animation import Animation
 from Game.ui.button import Button
-from Game.ui.widgets import draw_health_bar
+from Game.ui.widgets import draw_health_bar, draw_mana_bar
 
 INPUT, ACTING, ENDED = "input", "acting", "ended"
 
@@ -83,7 +83,9 @@ class GameplayScene(Scene):
         for anim in self.animations.values():
             anim.update(dt)
         mouse = pygame.mouse.get_pos()
-        for button in self.buttons.values():
+        legal = self.battle.legal_actions(Side.PLAYER)
+        for action, button in self.buttons.items():
+            button.enabled = action in legal
             button.update_hover(mouse)
 
         if self.phase == INPUT:
@@ -112,6 +114,7 @@ class GameplayScene(Scene):
             screen.blit(self.animations[side].frame, (xs[side], y))
             screen.blit(self.font.render(self._name(side), True, WHITE), (xs[side], y - 70))
             draw_health_bar(screen, xs[side], y - 50, fighter.hp, fighter.max_hp)
+            draw_mana_bar(screen, xs[side], y - 26, fighter.mana, fighter.max_mana)
 
         if self.phase == INPUT:
             for button in self.buttons.values():
@@ -124,6 +127,8 @@ class GameplayScene(Scene):
         screen.blit(status, status.get_rect(center=(self.width // 2, 60)))
         if self.last_event:
             e = self.last_event
+            crit = " CRÍTICO!" if e.crit else ""
             log = self.font.render(
-                f"{self._name(e.actor)}: {e.action.label}, {e.damage} de dano", True, GREY)
+                f"{self._name(e.actor)}: {e.action.label}, {e.damage} de dano{crit}",
+                True, (255, 215, 0) if e.crit else GREY)
             screen.blit(log, log.get_rect(center=(self.width // 2, 100)))

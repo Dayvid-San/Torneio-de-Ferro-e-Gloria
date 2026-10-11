@@ -18,5 +18,6 @@ não frames. O harness cobre isso sem precisar de janela (`SDL_VIDEODRIVER=dummy
 3. UI → `make snapshot` e inspecionar as imagens.
 4. `make check` antes do commit.
 
-Baseline atual (random, 2000 lutas/par, seed 1): Mago ≈64%, Cavaleiro ≈48%, Assassino ≈39%.
-O Mago está no limite do aceitável — decisão de design pendente, não bug.
+Baseline atual (random, 5000 lutas/par, seed 1): Assassino ≈53%, Mago ≈53%, Cavaleiro ≈45%.
+Com `--policy greedy` (IA que só maximiza dano líquido, ignorando mana) o Cavaleiro sobe a ≈73%:
+é um piso de pior caso, não o jogo real; observe-o ao mexer em defesa/mana, mas o gate usa `random`.
