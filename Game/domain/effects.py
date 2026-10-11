@@ -5,6 +5,7 @@ from enum import Enum
 class EffectKind(str, Enum):
     DEFENSE_UP = "defense_up"  # soma ao valor das duas defesas
     POISON = "poison"          # dano por turno do portador, ignora defesa
+    ATTACK_UP = "attack_up"    # soma ao poder do ataque físico
 
 
 @dataclass(frozen=True)

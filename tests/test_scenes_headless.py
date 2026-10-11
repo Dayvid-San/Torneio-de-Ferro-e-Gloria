@@ -49,7 +49,7 @@ def start_tournament(game, char="cavaleiro"):
 def test_tournament_flow_ends_in_result_with_next_action(game, monkeypatch):
     start_tournament(game)
     scene = game.scene
-    assert game.tournament is not None and scene.round_label == "Rodada 1/2"
+    assert game.tournament is not None and scene.round_label == f"Rodada 1/{game.tournament.total_rounds}"
     assert scene.defs[Side.PLAYER].id == "cavaleiro"
     assert scene.defs[Side.OPPONENT].id == game.tournament.opponents[0]
 
@@ -62,7 +62,7 @@ def test_tournament_flow_ends_in_result_with_next_action(game, monkeypatch):
     assert "next" in result.actions and game.tournament.round_number == 2
 
     game.step(click(result.actions["next"].rect.center), DT)
-    assert game.scene.round_label == "Rodada 2/2"
+    assert game.scene.round_label == f"Rodada 2/{game.tournament.total_rounds}"
     assert game.scene.defs[Side.OPPONENT].id == game.tournament.opponents[1]
 
 

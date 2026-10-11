@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from Game.domain.fighter import Assassin, Fighter, Knight, Mage
+from Game.domain.fighter import Archer, Assassin, Barbarian, Cleric, Fighter, Knight, Mage
 
 
 @dataclass(frozen=True)
@@ -38,6 +38,22 @@ CHARACTERS: dict[str, CharacterDef] = {c.id: c for c in (
         "Arnabin, um velho sábio (ou louco) do novo continente. "
         "Ele se diverte com seus experimentos em humanos e procura se entreter na arena.",
         "public/IconesJogo/mago.jpeg", "mago"),
+    # Arte de arqueiro/clérigo/bárbaro é PROVISÓRIA (recolor; ver tools/make_placeholder_sprites.py)
+    CharacterDef(
+        "arqueiro", "Arqueiro", Archer,
+        "Lyra, batedora das florestas do norte, banida por desobedecer a um lorde para salvar "
+        "uma aldeia. Cada flecha que dispara na arena é um pedido de redenção.",
+        "public/IconesJogo/arqueiro.jpeg", "arqueiro"),
+    CharacterDef(
+        "clerigo", "Clérigo", Cleric,
+        "Irmão Tomás, sacerdote itinerante que perdeu o convento para a peste. "
+        "Luta para provar que a fé também sabe ferir.",
+        "public/IconesJogo/clerigo.jpeg", "clerigo"),
+    CharacterDef(
+        "barbaro", "Bárbaro", Barbarian,
+        "Grom, chefe de um clã das montanhas, entrou no torneio para pagar o resgate "
+        "do seu povo com a glória dos vencedores.",
+        "public/IconesJogo/barbaro.jpeg", "barbaro"),
 )}
 
 SPRITE_KIND = {"idle": "idle", "physical": "ataque_fisico", "magic": "magico"}

@@ -94,9 +94,12 @@ class GameplayScene(Scene):
         self.game.audio.play("hit")
         x = self._x(event.target) + 100
         text = f"{event.damage}!" if event.crit else str(event.damage)
-        if event.damage or event.action is not ActionType.SKILL:
+        if event.damage or event.action is not ActionType.SKILL:  # skills sem dano não mostram 0
             self.floaters.append({"text": text, "x": x, "y": self.height // 2 - 90, "age": 0.0,
                                   "color": (255, 215, 0) if event.crit else WHITE})
+        if event.healed:
+            self.floaters.append({"text": f"+{event.healed}", "x": self._x(event.actor) + 100,
+                                  "y": self.height // 2 - 90, "age": 0.0, "color": (120, 255, 140)})
         if event.self_damage:
             self.floaters.append({"text": f"-{event.self_damage}", "x": self._x(event.actor) + 100,
                                   "y": self.height // 2 - 90, "age": 0.0, "color": (120, 220, 80)})
@@ -218,7 +221,8 @@ class GameplayScene(Scene):
             e = self.last_event
             crit = " CRÍTICO!" if e.crit else ""
             what = e.skill or e.action.label
-            result = f"{e.damage} de dano" if e.damage else ", ".join(e.effects)
+            result = (f"{e.damage} de dano" if e.damage
+                      else f"recupera {e.healed}" if e.healed else ", ".join(e.effects))
             poison = f"  (veneno -{e.self_damage})" if e.self_damage else ""
             log = self.small_font.render(
                 f"{self._name(e.actor)}: {what}, {result}{crit}{poison}",

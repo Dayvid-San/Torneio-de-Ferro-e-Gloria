@@ -24,6 +24,7 @@ class BattleEvent:
     skill: str | None = None        # nome da habilidade, se a ação foi SKILL
     self_damage: int = 0            # veneno sofrido pelo ator ao fim do turno
     effects: tuple[str, ...] = ()   # efeitos aplicados neste turno
+    healed: int = 0                 # PV recuperados pelo ator (habilidade de cura)
 
 
 class BattleOver(RuntimeError):
@@ -96,9 +97,10 @@ class Battle:
         if defender.is_alive:  # fim do turno do ator: veneno, cooldown e duração
             self_damage = attacker.end_turn_upkeep()
             attacker.regen_mana(self.arena.mana_regen_bonus)
-        applied = ()
+        applied, healed = (), 0
         if skill is not None:
             attacker.start_cooldown()
+            healed = attacker.heal(skill.self_heal)
             for effect in skill.self_effects:
                 attacker.add_effect(effect)
             for effect in skill.target_effects:
@@ -108,7 +110,7 @@ class Battle:
         event = BattleEvent(self.turn_number, actor_side, actor_side.other, action,
                             dealt, defender.hp, not defender.is_alive,
                             crit, cost, attacker.mana, skill.name if skill else None,
-                            self_damage, applied)
+                            self_damage, applied, healed)
         self.history.append(event)
         self.turn_side = actor_side.other
         self.turn_number += 1

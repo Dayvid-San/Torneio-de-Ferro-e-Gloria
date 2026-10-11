@@ -6,13 +6,16 @@ class Tournament:
     personagens, um por rodada, em ordem sorteada. Perdeu, está fora."""
 
     def __init__(self, player_id: str, character_ids: list[str],
-                 rng: random.Random | None = None, arena_ids: list[str] | None = None):
+                 rng: random.Random | None = None, arena_ids: list[str] | None = None,
+                 max_rounds: int | None = None):
         self.player_id = player_id
         self.opponents = [c for c in character_ids if c != player_id]
         if not self.opponents:
             raise ValueError("Torneio precisa de ao menos um oponente")
         rng = rng or random.Random()
         rng.shuffle(self.opponents)
+        if max_rounds:
+            self.opponents = self.opponents[:max_rounds]
         # uma arena por rodada, sem repetir até esgotar as disponíveis
         pool = list(arena_ids or [])
         self.arenas: list[str | None] = []

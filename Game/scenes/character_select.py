@@ -18,9 +18,9 @@ class CharacterSelectScene(Scene):
         self.small_font = assets.font(30)
         self.title = self.font.render("Selecione o Lutador", True, WHITE)
         self.background = assets.image("public/fundo.jpeg", game.screen.get_size(), alpha=False)
-        self.icons = {cid: assets.image(c.icon, (80, 80)) for cid, c in CHARACTERS.items()}
+        self.icons = {cid: assets.image(c.icon, (56, 56)) for cid, c in CHARACTERS.items()}
         self.buttons = {
-            cid: Button(150, 200 + i * 100, 150, 50, c.name, self.font, GREY, WHITE)
+            cid: Button(150, 160 + i * 62, 170, 50, c.name, self.font, GREY, WHITE)
             for i, (cid, c) in enumerate(CHARACTERS.items())
         }
         self.hovered_id: str | None = None
@@ -29,7 +29,8 @@ class CharacterSelectScene(Scene):
     def select(self, char_id: str) -> None:
         game = self.game
         game.selected_character_id = char_id
-        game.tournament = (Tournament(char_id, list(CHARACTERS), game.rng, list(ARENAS))
+        game.tournament = (Tournament(char_id, list(CHARACTERS), game.rng, list(ARENAS),
+                           max_rounds=len(ARENAS))
                            if game.mode == "torneio" else None)
         game.go_to("gameplay")
 
@@ -69,8 +70,10 @@ class CharacterSelectScene(Scene):
 
     def _draw_text_box(self, screen, lines, x, y, padding=10):
         line_h = self.small_font.get_linesize()
-        box = pygame.Surface((max(l.get_width() for l in lines) + 2 * padding,
-                              len(lines) * line_h + 2 * padding), pygame.SRCALPHA)
+        height = len(lines) * line_h + 2 * padding
+        y = min(y, screen.get_height() - height - 10)  # não sai da tela
+        box = pygame.Surface((max(l.get_width() for l in lines) + 2 * padding, height),
+                             pygame.SRCALPHA)
         box.fill((0, 0, 0, 150))
         screen.blit(box, (x, y))
         for i, line in enumerate(lines):
@@ -78,9 +81,9 @@ class CharacterSelectScene(Scene):
 
     def draw(self, screen):
         screen.blit(self.background, (0, 0))
-        screen.blit(self.title, (200, 100))
+        screen.blit(self.title, (150, 100))
         for cid, button in self.buttons.items():
-            screen.blit(self.icons[cid], (button.rect.x - 100, button.rect.y))
+            screen.blit(self.icons[cid], (button.rect.x - 70, button.rect.y - 3))
             button.draw(screen)
             if button.hovered and self._description:
                 self._draw_text_box(screen, self._description, button.rect.right + 20, button.rect.y)

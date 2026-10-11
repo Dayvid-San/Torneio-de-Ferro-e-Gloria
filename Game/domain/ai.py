@@ -46,12 +46,7 @@ class HeuristicPolicy:
         if self.rng.random() < self.randomness:
             return self.rng.choice(legal)
         me, foe = battle.fighter(side), battle.fighter(side.other)
-        skill = me.skill
-        if ActionType.SKILL in legal and skill:
-            if skill.damage_action is None:  # habilidade defensiva
-                if me.hp <= 0.6 * me.max_hp and not me.effects:
-                    return ActionType.SKILL
-            else:
-                return ActionType.SKILL
+        if ActionType.SKILL in legal and me.skill and me.skill.should_use(me):
+            return ActionType.SKILL
         pool = [a for a in legal if a is not ActionType.SKILL]
         return max(pool, key=lambda a: _estimate(me, foe, a))
