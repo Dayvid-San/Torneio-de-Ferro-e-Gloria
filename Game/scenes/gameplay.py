@@ -1,210 +1,226 @@
 import pygame
-import random
-from Game.ui.animations import Animation
-from Game.ui.button import Button
-from Game.scenes.scenes import Scene
-from Game.scenes.menu import MenuScene
 
-from personagem import Personagem
-from mago import Mago
-from cavaleiro import Cavaleiro
-from assasino import Assasino
+from Game import config
+from Game.config import GREEN, GREY, RED, WHITE
+from Game.data.arenas import ARENAS
+from Game.data.characters import CHARACTERS, SPRITE_KIND, CharacterDef
+from Game.domain.actions import ActionType, Side
+from Game.domain.ai import HeuristicPolicy
+from Game.domain.battle import Battle, BattleEvent
+from Game.scenes.base import Scene
+from Game.ui.animation import Animation
+from Game.ui.button import Button
+from Game.ui.widgets import draw_health_bar, draw_mana_bar
+
+INPUT, ACTING, ENDED = "input", "acting", "ended"
+
 
 class GameplayScene(Scene):
-    def __init__(self, game):
+    """Apresentação de uma `Battle`. A scene só decide *quando* agir e como
+    mostrar; todas as regras vivem em Game.domain."""
+
+    def __init__(self, game, player_id: str | None = None, opponent_id: str | None = None,
+                 arena_id: str | None = None, battle: Battle | None = None):
         super().__init__(game)
-        self.font = pygame.font.SysFont(None, 40)
-        self.clock = pygame.time.Clock()
-        self.action_delay_start = 0
-        self.is_action_in_progress = False
-        self.last_attacker = None
-        self.pending_opponent = False  # Novo flag para sequencializar ações
+        assets = game.assets
+        player_id = player_id or game.selected_character_id or "assassino"
+        tournament = game.tournament if game.mode == "torneio" else None
+        if opponent_id is None and tournament and tournament.current_opponent:
+            opponent_id = tournament.current_opponent
+        if opponent_id is None:
+            opponent_id = game.rng.choice([c for c in CHARACTERS if c != player_id])
+        if arena_id is None:
+            arena_id = (tournament.current_arena if tournament else None) or game.rng.choice(list(ARENAS))
+        self.arena = ARENAS[arena_id]
+        self.defs: dict[Side, CharacterDef] = {
+            Side.PLAYER: CHARACTERS[player_id], Side.OPPONENT: CHARACTERS[opponent_id]}
+        self.battle = battle or Battle(
+            self.defs[Side.PLAYER].create(), self.defs[Side.OPPONENT].create(),
+            policy=HeuristicPolicy(game.rng), rng=game.rng, arena=self.arena)
 
-        # Tamanho da tela
-        self.screen_width, self.screen_height = self.game.screen.get_size()
-
-        # Carregar fundo da arena
-        try:
-            self.background = pygame.image.load("public/fundo.jpeg").convert()
-            self.background = pygame.transform.scale(self.background, (self.screen_width, self.screen_height))
-        except FileNotFoundError:
-            print("Arquivo 'public/fundo.jpeg' não encontrado. Usando fundo preto.")
-            self.background = pygame.Surface((self.screen_width, self.screen_height))
-            self.background.fill((0, 0, 0))
-
-        # Personagens disponíveis e stats
-
-        Personagem_Assasino = Assasino(25,15)
-        Personagem_Cavaleiro = Cavaleiro(30,10)
-        Personagem_Mago = Mago(10,35)
-
-
-        self.characters = ["Assassino", "Cavaleiro", "Mago"]
-        self.character_stats = {
-            "Assassino": {"physical": Personagem_Assasino.getFisica(), "magic": Personagem_Assasino.getMagia(), "idle_paths": ["public/moveChar/right_assassino_idle_1.png", "public/moveChar/right_assassino_idle_2.png"],
-                          "physical_paths": ["public/moveChar/right_assassino_ataque_fisico_1.png", "public/moveChar/right_assassino_ataque_fisico_2.png"],
-                          "magic_paths": ["public/moveChar/right_assassino_magico_1.png", "public/moveChar/right_assassino_magico_2.png"]},
-            "Cavaleiro": {"physical": Personagem_Cavaleiro.getFisica(), "magic": Personagem_Cavaleiro.getMagia(), "idle_paths": ["public/moveChar/right_cavaleiro_idle_1.png", "public/moveChar/right_cavaleiro_idle_2.png"],
-                          "physical_paths": ["public/moveChar/right_cavaleiro_ataque_fisico_1.png", "public/moveChar/right_cavaleiro_ataque_fisico_2.png"],
-                          "magic_paths": ["public/moveChar/right_cavaleiro_magico_1.png", "public/moveChar/right_cavaleiro_magico_2.png"]},
-            "Mago": {"physical": Personagem_Mago.getFisica(), "magic": Personagem_Mago.getMagia(), "idle_paths": ["public/moveChar/right_mago_idle_1.png", "public/moveChar/right_mago_idle_2.png"],
-                     "physical_paths": ["public/moveChar/right_mago_ataque_fisico_1.png", "public/moveChar/right_mago_ataque_fisico_2.png"],
-                     "magic_paths": ["public/moveChar/right_mago_magico_1.png", "public/moveChar/right_mago_magico_2.png"]}
+        self.font = assets.font(40)
+        self.background = assets.image("public/fundo.jpeg", game.screen.get_size(), alpha=False)
+        w, h = game.screen.get_size()
+        self.width, self.height = w, h
+        self.small_font = assets.font(30)
+        self.tiny_font = assets.font(24)
+        me = self.battle.fighter(Side.PLAYER)
+        self.button_font = assets.font(30)
+        self.buttons = {
+            ActionType.PHYSICAL: Button(20, h - 90, 240, 50, "Físico [1]", self.button_font),
+            ActionType.MAGIC: Button(280, h - 90, 240, 50,
+                                     f"Magia [2] -{me.cost(ActionType.MAGIC)}", self.button_font),
+            ActionType.SKILL: Button(540, h - 90, 240, 50, "", self.button_font),
         }
+        self._skill_label = None
+        self.hotkeys = {pygame.K_1: ActionType.PHYSICAL, pygame.K_f: ActionType.PHYSICAL,
+                        pygame.K_2: ActionType.MAGIC, pygame.K_3: ActionType.SKILL}
+        self.tint = pygame.Surface((w, h), pygame.SRCALPHA)
+        self.tint.fill(self.arena.tint)
+        self.banner_time = 3.0
+        self.floaters: list[dict] = []  # números de dano flutuantes
+        self.round_label = (f"Rodada {tournament.round_number}/{tournament.total_rounds}"
+                            if tournament else "Duelo Rápido")
+        self.animations = {side: self._animation(side, "idle") for side in Side}
+        self.phase = INPUT
+        self.timer = 0.0
+        self.last_event: BattleEvent | None = None
 
-        # Personagem selecionado
-        self.player_character = self.game.selected_character or "Assassino"
-        available_opponents = [char for char in self.characters if char != self.player_character]
-        self.opponent_character = random.choice(available_opponents)
+    # --- apresentação ---------------------------------------------------
+    def _animation(self, side: Side, kind: str) -> Animation:
+        paths = self.defs[side].sprite_paths(SPRITE_KIND[kind])
+        frames = [self.game.assets.image(p, config.SPRITE_SIZE, flip_x=side is Side.OPPONENT)
+                  for p in paths]
+        return Animation(frames, config.FRAME_DURATION)
 
-        # Carregar animações
-        self.player_animation = self.load_animation(self.player_character, "idle")
-        self.opponent_animation = self.load_animation(self.opponent_character, "idle", flip_x=True)
+    def _name(self, side: Side) -> str:
+        return self.defs[side].name
 
-        # Atributos de combate
-        self.player_health = 100
-        self.max_health = 100
-        self.opponent_health = 100
-        self.is_player_turn = True
-        self.game_over = False
-        self.winner_text = None
-        self.end_time = 0
+    def _status_text(self) -> str:
+        if self.battle.is_over:
+            return "Você Venceu!" if self.battle.winner is Side.PLAYER else "Você Perdeu!"
+        return "Seu Turno" if self.battle.turn_side is Side.PLAYER else "Turno do Oponente"
 
-        # Botões de ações
-        button_width = 150
-        button_height = 50
-        button_y = self.screen_height - 100
-        self.physical_button = Button(self.screen_width // 3 - button_width // 2, button_y, button_width, button_height, "Ataque Físico", self.font, (200, 200, 200), (255, 255, 255))
-        self.magic_button = Button(2 * self.screen_width // 3 - button_width // 2, button_y, button_width, button_height, "Magia", self.font, (200, 200, 200), (255, 255, 255))
+    # --- fluxo ----------------------------------------------------------
+    def perform(self, action: ActionType | None = None) -> None:
+        event = self.battle.act(action)
+        self.last_event = event
+        skill = self.battle.fighter(event.actor).skill if event.skill else None
+        physical = (event.action is ActionType.PHYSICAL
+                    or (skill is not None and skill.damage_action is ActionType.PHYSICAL))
+        kind = "physical" if physical else "magic"
+        self.animations[event.actor] = self._animation(event.actor, kind)
+        self.game.audio.play("attack")
+        self.game.audio.play("hit")
+        x = self._x(event.target) + 100
+        text = f"{event.damage}!" if event.crit else str(event.damage)
+        if event.damage or event.action is not ActionType.SKILL:
+            self.floaters.append({"text": text, "x": x, "y": self.height // 2 - 90, "age": 0.0,
+                                  "color": (255, 215, 0) if event.crit else WHITE})
+        if event.self_damage:
+            self.floaters.append({"text": f"-{event.self_damage}", "x": self._x(event.actor) + 100,
+                                  "y": self.height // 2 - 90, "age": 0.0, "color": (120, 220, 80)})
+        self.phase, self.timer = ACTING, config.ACTION_DELAY
 
-        # Textos
-        self.player_text = self.font.render(self.player_character, True, (255, 255, 255))
-        self.opponent_text = self.font.render(self.opponent_character, True, (255, 255, 255))
-        self.turn_text = self.font.render("Seu Turno", True, (255, 255, 255))
+    def _refresh_skill_button(self) -> None:
+        me = self.battle.fighter(Side.PLAYER)
+        skill = me.skill
+        if skill is None:
+            self.buttons[ActionType.SKILL].enabled = False
+            return
+        if me.skill_cooldown:
+            suffix = f" ({me.skill_cooldown}t)"
+        elif skill.mana_cost:
+            suffix = f" -{skill.mana_cost}"
+        else:
+            suffix = ""
+        label = f"{skill.name} [3]{suffix}"
+        if label != self._skill_label:
+            self._skill_label = label
+            self.buttons[ActionType.SKILL].set_text(label, self.button_font)
 
-    def load_animation(self, character, action_type="idle", flip_x=False):
-        """Carrega animação baseada no tipo, com opção de flip."""
-        paths_key = f"{action_type}_paths" if action_type != "idle" else "idle_paths"
-        paths = self.character_stats[character].get(paths_key, [])
-        try:
-            return Animation(paths, frame_duration=0.25, scale_size=(200, 200), flip_x=flip_x)
-        except FileNotFoundError:
-            print(f"Animação {action_type} para {character} não encontrada. Usando estática.")
-            static_path = f"public/IconesJogo/{character.lower()}.jpeg"
-            return Animation([static_path], frame_duration=0.15, scale_size=(200, 200), flip_x=flip_x)
+    def _x(self, side: Side) -> int:
+        return self.width // 4 - 100 if side is Side.PLAYER else 3 * self.width // 4 - 100
 
     def handle_events(self, events):
-        if self.game_over:
-            return
         for event in events:
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    self.game.change_scene(MenuScene(self.game))
-            if event.type == pygame.MOUSEBUTTONDOWN and self.is_player_turn:
-                if self.physical_button.foi_clicado(event):
-                    self.perform_action("physical", self.player_character, self.opponent_character)
-                    self.end_player_turn()
-                elif self.magic_button.foi_clicado(event):
-                    self.perform_action("magic", self.player_character, self.opponent_character)
-                    self.end_player_turn()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                self.game.go_to("menu")
+                return
+            if self.phase != INPUT:
+                continue
+            if event.type == pygame.KEYDOWN and event.key in self.hotkeys:
+                action = self.hotkeys[event.key]
+                if action in self.battle.legal_actions(Side.PLAYER):
+                    self.perform(action)
+                    return
+            for action, button in self.buttons.items():
+                if button.was_clicked(event):
+                    self.perform(action)
+                    return
 
-    def perform_action(self, action, attacker, target):
-        """Executa ação, calcula dano, troca animação."""
-        self.last_attacker = attacker
-        flip_x = attacker == self.opponent_character
-        if attacker == self.player_character:
-            self.player_animation = self.load_animation(attacker, action)
-            self.player_animation.reset()
-        else:
-            self.opponent_animation = self.load_animation(attacker, action, flip_x=flip_x)
-            self.opponent_animation.reset()
+    def update(self, dt):
+        for anim in self.animations.values():
+            anim.update(dt)
+        self.banner_time = max(0.0, self.banner_time - dt)
+        self._refresh_skill_button()
+        for f in self.floaters:
+            f["age"] += dt
+        self.floaters = [f for f in self.floaters if f["age"] < 1.0]
+        mouse = pygame.mouse.get_pos()
+        legal = self.battle.legal_actions(Side.PLAYER)
+        for action, button in self.buttons.items():
+            button.enabled = action in legal
+            button.update_hover(mouse)
 
-        # Calcular dano
-        damage = self.character_stats[attacker][action]
-        if attacker == self.player_character:
-            self.opponent_health = max(0, self.opponent_health - damage)
-            print(f"{attacker} usou {action.capitalize()}, causando {damage} de dano a {target}.")
-        else:
-            self.player_health = max(0, self.player_health - damage)
-            print(f"{attacker} usou {action.capitalize()}, causando {damage} de dano a {target}.")
-
-        # Iniciar delay não-bloqueante
-        self.is_action_in_progress = True
-        self.action_delay_start = pygame.time.get_ticks()
-
-    def end_player_turn(self):
-        """Finaliza turno do jogador e sinaliza ação do oponente."""
-        self.pending_opponent = True
-        self.is_player_turn = False
-        self.turn_text = self.font.render("Turno do Oponente", True, (255, 255, 255))
-
-    def update(self):
-        if self.game_over:
-            if pygame.time.get_ticks() > self.end_time:
-                self.game.change_scene(MenuScene(self.game))
+        if self.phase == INPUT:
             return
+        self.timer -= dt
+        if self.timer > 0:
+            return
+        if self.phase == ENDED:
+            self._finish()
+        elif self.battle.is_over:
+            self.animations[self.last_event.actor] = self._animation(self.last_event.actor, "idle")
+            self.phase, self.timer = ENDED, config.END_DELAY
+        else:
+            self.animations[self.last_event.actor] = self._animation(self.last_event.actor, "idle")
+            if self.battle.turn_side is Side.OPPONENT:
+                self.perform()  # policy do oponente
+            else:
+                self.phase = INPUT
 
-        # Atualizar animações sempre
-        self.player_animation.update()
-        self.opponent_animation.update()
-
-        # Gerenciar delay de ação
-        if self.is_action_in_progress:
-            if pygame.time.get_ticks() - self.action_delay_start >= 800:
-                # Fim do delay: voltar para idle
-                if self.last_attacker == self.player_character:
-                    self.player_animation = self.load_animation(self.player_character, "idle", flip_x=False)
-                elif self.last_attacker == self.opponent_character:
-                    self.opponent_animation = self.load_animation(self.opponent_character, "idle", flip_x=True)
-
-                self.is_action_in_progress = False
-
-                if self.pending_opponent:
-                    self.pending_opponent = False
-                    opponent_action = random.choice(["physical", "magic"])
-                    self.perform_action(opponent_action, self.opponent_character, self.player_character)
-                else:
-                    if not self.is_player_turn:
-                        self.is_player_turn = True
-                        self.turn_text = self.font.render("Seu Turno", True, (255, 255, 255))
-
-        # Verificar fim do jogo
-        if self.player_health <= 0:
-            self.game_over = True
-            self.winner_text = self.font.render("Você Perdeu!", True, (255, 0, 0))
-            self.end_time = pygame.time.get_ticks() + 2000
-        elif self.opponent_health <= 0:
-            self.game_over = True
-            self.winner_text = self.font.render("Você Venceu!", True, (0, 255, 0))
-            self.end_time = pygame.time.get_ticks() + 2000
-
-        self.clock.tick(60)
+    def _finish(self) -> None:
+        won = self.battle.winner is Side.PLAYER
+        tournament = self.game.tournament if self.game.mode == "torneio" else None
+        if tournament and not tournament.is_over:
+            tournament.record(won)
+        self.game.go_to("result", won=won, turns=len(self.battle.history),
+                        opponent_id=self.defs[Side.OPPONENT].id)
 
     def draw(self, screen):
         screen.blit(self.background, (0, 0))
+        screen.blit(self.tint, (0, 0))
+        y = self.height // 2
+        xs = {Side.PLAYER: self.width // 4 - 100, Side.OPPONENT: 3 * self.width // 4 - 100}
+        for side in Side:
+            fighter = self.battle.fighter(side)
+            screen.blit(self.animations[side].frame, (xs[side], y))
+            screen.blit(self.font.render(self._name(side), True, WHITE), (xs[side], y - 85))
+            tags = "  ".join(e.label for e in fighter.effects)
+            if tags:
+                screen.blit(self.tiny_font.render(tags, True, (255, 215, 120)),
+                            (xs[side], y - 10))
+            draw_health_bar(screen, xs[side], y - 50, fighter.hp, fighter.max_hp)
+            draw_mana_bar(screen, xs[side], y - 26, fighter.mana, fighter.max_mana)
 
-        player_x = self.screen_width // 4 - 100
-        opponent_x = 3 * self.screen_width // 4 - 100
-        char_y = self.screen_height // 2
+        if self.phase == INPUT:
+            for button in self.buttons.values():
+                button.draw(screen)
+        for f in self.floaters:
+            label = self.font.render(f["text"], True, f["color"])
+            screen.blit(label, label.get_rect(center=(f["x"], f["y"] - int(60 * f["age"]))))
+        screen.blit(self.small_font.render(self.round_label, True, WHITE), (10, 10))
+        arena = self.small_font.render(f"{self.arena.name}", True, WHITE)
+        screen.blit(arena, arena.get_rect(topright=(self.width - 10, 10)))
+        if self.banner_time > 0:
+            for i, text in enumerate((self.arena.name, self.arena.description,
+                                      f"Efeitos: {self.arena.effects_summary}")):
+                line = (self.font if i == 0 else self.tiny_font).render(text, True, (255, 215, 120))
+                screen.blit(line, line.get_rect(center=(self.width // 2, 150 + i * 30)))
 
-        screen.blit(self.player_animation.get_current_frame(), (player_x, char_y))
-        screen.blit(self.player_text, (player_x, char_y - 70))
-        health_width = int(200 * (self.player_health / self.max_health))
-        health_color = (255, 0, 0) if self.player_health > 20 else (255, 100, 100)
-        pygame.draw.rect(screen, health_color, (player_x, char_y - 50, health_width, 20))
-        pygame.draw.rect(screen, (255, 255, 255), (player_x, char_y - 50, 200, 20), 2)
-
-        screen.blit(self.opponent_animation.get_current_frame(), (opponent_x, char_y))
-        screen.blit(self.opponent_text, (opponent_x, char_y - 70))
-        health_width = int(200 * (self.opponent_health / self.max_health))
-        health_color = (255, 0, 0) if self.opponent_health > 20 else (255, 100, 100)
-        pygame.draw.rect(screen, health_color, (opponent_x, char_y - 50, health_width, 20))
-        pygame.draw.rect(screen, (255, 255, 255), (opponent_x, char_y - 50, 200, 20), 2)
-
-        if self.is_player_turn and not self.game_over and not self.is_action_in_progress:
-            self.physical_button.desenhar(screen)
-            self.magic_button.desenhar(screen)
-
-        screen.blit(self.turn_text, (self.screen_width // 2 - 100, 50))
-        if self.game_over and self.winner_text:
-            screen.blit(self.winner_text, (self.screen_width // 2 - 150, self.screen_height // 2 - 50))
+        color = WHITE
+        if self.battle.is_over:
+            color = GREEN if self.battle.winner is Side.PLAYER else RED
+        status = self.font.render(self._status_text(), True, color)
+        screen.blit(status, status.get_rect(center=(self.width // 2, 60)))
+        if self.last_event:
+            e = self.last_event
+            crit = " CRÍTICO!" if e.crit else ""
+            what = e.skill or e.action.label
+            result = f"{e.damage} de dano" if e.damage else ", ".join(e.effects)
+            poison = f"  (veneno -{e.self_damage})" if e.self_damage else ""
+            log = self.small_font.render(
+                f"{self._name(e.actor)}: {what}, {result}{crit}{poison}",
+                True, (255, 215, 0) if e.crit else GREY)
+            screen.blit(log, log.get_rect(center=(self.width // 2, 100)))

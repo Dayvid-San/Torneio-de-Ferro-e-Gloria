@@ -1,0 +1,9 @@
+class Scene:
+    """Contrato de toda cena. `dt` em segundos."""
+
+    def __init__(self, game):
+        self.game = game
+
+    def handle_events(self, events) -> None: ...
+    def update(self, dt: float) -> None: ...
+    def draw(self, screen) -> None: ...

@@ -38,3 +38,5 @@ dist/
 *.wav~
 *.mp3~
 *.ogg~
+snapshots/
+.pytest_cache/

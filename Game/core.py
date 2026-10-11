@@ -1,30 +1,54 @@
+import os
+import random
+
 import pygame
 
+from Game import config
+from Game.assets import Assets
+from Game.audio import Audio
+from Game.scenes import create_scene
+
+
 class Game:
-    def __init__(self):
+    """Dono da janela, do loop e da cena atual. `step()` avança um quadro e é
+    o ponto de entrada tanto do loop real quanto dos testes headless."""
+
+    def __init__(self, seed: int | None = None, headless: bool = False):
+        if headless:
+            os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+            os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
         pygame.init()
-        self.screen = pygame.display.set_mode((800, 600))
-        pygame.display.set_caption("Torneio de Ferro e Sangue")
+        self.screen = pygame.display.set_mode((config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
+        pygame.display.set_caption(config.TITLE)
         self.clock = pygame.time.Clock()
+        self.assets = Assets()
+        self.audio = Audio()
+        if not headless:
+            self.audio.start_music()
+        self.rng = random.Random(seed)
         self.running = True
-        from Game.scenes.menu import MenuScene  # Com Game.
-        self.currentScene = MenuScene(self)
+        self.selected_character_id: str | None = None
+        self.mode = "torneio"  # torneio | duelo
+        self.tournament = None
+        self.scene = None
+        self.go_to("menu")
 
-    def change_scene(self, new_scene):
-        self.currentScene = new_scene
+    def go_to(self, scene_name: str, **kwargs) -> None:
+        self.scene = create_scene(scene_name, self, **kwargs)
 
-    def run(self):
+    def step(self, events, dt: float) -> None:
+        for event in events:
+            if event.type == pygame.QUIT:
+                self.running = False
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_m:
+                self.audio.toggle_mute()
+        self.scene.handle_events(events)
+        self.scene.update(dt)
+        self.scene.draw(self.screen)
+
+    def run(self) -> None:
         while self.running:
-            events = pygame.event.get()
-            for event in events:
-                if event.type == pygame.QUIT:
-                    self.running = False
-
-            self.currentScene.handle_events(events)
-            self.currentScene.update()
-            self.currentScene.draw(self.screen)
-
+            dt = self.clock.tick(config.FPS) / 1000
+            self.step(pygame.event.get(), dt)
             pygame.display.flip()
-            self.clock.tick(60)
-
         pygame.quit()
