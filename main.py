@@ -1,8 +1,9 @@
-from Game.core import Game  # Com Game.
+from Game.core import Game
+
 
 def main():
-    game = Game()
-    game.run()
+    Game().run()
+
 
 if __name__ == "__main__":
     main()

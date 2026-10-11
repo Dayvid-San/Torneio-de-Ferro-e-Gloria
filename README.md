@@ -10,6 +10,15 @@
 
 É um sistema de combate, honra, tática e aleatoriedade inspirado no mundo medieval-fantástico criado por <a href="http://dayvidsantana.com/">Dayvid Santana</a> para o projeto <a href="https://castle-collis-angelus.vercel.app/">Castle Collis Angelus</a>. Este jogo se passa durante o **Torneio de Ferro e Glória**, um evento que reúne guerreiros de diferentes casas nobres para enfrentar desafios físicos, espirituais e mentais.
 
+## 🕹️ Como rodar
+
+```bash
+pip install -r requirements.txt && python main.py
+```
+
+Desenvolvimento: `make check` (testes, balanceamento e snapshots headless). Veja
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/HARNESS.md](docs/HARNESS.md) e [CLAUDE.md](CLAUDE.md).
+
 ## 🎯 Objetivo
 
 Criar um RPG jogável com:

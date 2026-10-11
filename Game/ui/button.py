@@ -1,53 +1,35 @@
 import pygame
 
+from Game.config import GREY, WHITE
+
+
 class Button:
-    def __init__(self, x, y, largura, altura, texto, fonte, cor, cor_hover, cor_texto=(255, 255, 255)):
-        self.rect = pygame.Rect(x, y, largura, altura)
-        self.texto = texto
-        self.fonte = fonte
-        self.cor = cor
-        self.cor_hover = cor_hover
-        self.cor_texto = cor_texto  # Novo: cor customizável para texto
+    def __init__(self, x, y, width, height, text, font,
+                 color=GREY, hover_color=WHITE, text_color=WHITE):
+        self.rect = pygame.Rect(x, y, width, height)
+        self.color = color
+        self.hover_color = hover_color
         self.hovered = False
-        self.pressed = False  # Novo: para feedback de clique
-        # Pré-renderizar texto para performance
-        self.texto_renderizado = self.fonte.render(texto, True, self.cor_texto)
+        self.pressed = False
+        self._label = font.render(text, True, text_color)
 
-    def desenhar(self, tela):
-        # Cor dinâmica: pressed > hover > normal
-        if self.pressed:
-            cor = tuple(max(0, c - 50) for c in self.cor)  # Mais escura no pressed
-        elif self.hovered:
-            cor = self.cor_hover
-        else:
-            cor = self.cor
-        
-        # Desenhar retângulo (fill)
-        pygame.draw.rect(tela, cor, self.rect)
-        # Borda para estilo pixel art
-        pygame.draw.rect(tela, (255, 255, 255), self.rect, 2)  # Borda branca fina
-        
-        # Centralizar e desenhar texto (corrigido)
-        text_rect = self.texto_renderizado.get_rect(center=self.rect.center)
-        tela.blit(self.texto_renderizado, text_rect)
+    def update_hover(self, mouse_pos) -> None:
+        self.hovered = self.rect.collidepoint(mouse_pos)
 
-    def checar_hover(self, pos_mouse):
-        """Atualiza hovered baseado na posição do mouse."""
-        self.hovered = self.rect.collidepoint(pos_mouse)
-
-    def foi_clicado(self, evento):
-        """Verifica se foi clicado (independente de hovered prévio)."""
-        if evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
-            if self.rect.collidepoint(evento.pos):
-                self.pressed = True  # Ativa pressed
+    def was_clicked(self, event) -> bool:
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if self.rect.collidepoint(event.pos):
+                self.pressed = True
                 return True
-        elif evento.type == pygame.MOUSEBUTTONUP and evento.button == 1:
-            self.pressed = False  # Desativa ao soltar
+        elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+            self.pressed = False
         return False
 
-    def update(self, eventos):  # Novo: método para processar eventos (opcional, para usar em cenas)
-        """Processa eventos para pressed/hover. Chame no handle_events da cena."""
-        for evento in eventos:
-            if self.foi_clicado(evento):
-                pass  # Ação já retornada
-            # Hover é checado separadamente no update da cena
+    def draw(self, screen) -> None:
+        if self.pressed:
+            color = tuple(max(0, c - 50) for c in self.color)
+        else:
+            color = self.hover_color if self.hovered else self.color
+        pygame.draw.rect(screen, color, self.rect)
+        pygame.draw.rect(screen, WHITE, self.rect, 2)
+        screen.blit(self._label, self._label.get_rect(center=self.rect.center))
