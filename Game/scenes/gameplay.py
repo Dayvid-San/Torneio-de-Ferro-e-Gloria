@@ -221,8 +221,13 @@ class GameplayScene(Scene):
             e = self.last_event
             crit = " CRÍTICO!" if e.crit else ""
             what = e.skill or e.action.label
-            result = (f"{e.damage} de dano" if e.damage
-                      else f"recupera {e.healed}" if e.healed else ", ".join(e.effects))
+            parts = []
+            if e.damage:
+                parts.append(f"{e.damage} de dano")
+            if e.healed:
+                parts.append(f"recupera {e.healed}")
+            parts.extend(e.effects)
+            result = ", ".join(parts) or "sem efeito"
             poison = f"  (veneno -{e.self_damage})" if e.self_damage else ""
             log = self.small_font.render(
                 f"{self._name(e.actor)}: {what}, {result}{crit}{poison}",

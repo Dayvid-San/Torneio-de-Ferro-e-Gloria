@@ -33,12 +33,12 @@ def test_shield_stance_deals_no_damage_and_raises_defense_for_two_enemy_turns():
     b = battle(knight, Assassin())
     e = b.act(ActionType.SKILL)
     assert e.damage == 0 and not e.crit and e.effects == ("Escudo",)
-    assert knight.defense_against(ActionType.PHYSICAL) == 8 + 6
-    b.act(ActionType.PHYSICAL)            # 1º turno do oponente sob escudo: 25 - 14 = 11
-    assert b.history[-1].damage == 11
+    assert knight.defense_against(ActionType.PHYSICAL) == 8 + 9
+    b.act(ActionType.PHYSICAL)            # 1º turno do oponente sob escudo: 25 - 17 = 8
+    assert b.history[-1].damage == 8
     b.act(ActionType.PHYSICAL)            # turno do cavaleiro (escudo ainda ativo)
     b.act(ActionType.PHYSICAL)            # 2º turno do oponente: ainda protegido
-    assert b.history[-1].damage == 11
+    assert b.history[-1].damage == 8
     b.act(ActionType.PHYSICAL)            # cavaleiro age; escudo expira ao fim deste turno
     assert not knight.has_effect(EffectKind.DEFENSE_UP)
     b.act(ActionType.PHYSICAL)

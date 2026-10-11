@@ -22,8 +22,10 @@ não frames. O harness cobre isso sem precisar de janela (`SDL_VIDEODRIVER=dummy
 medida de balanceamento que importa; `random` mostra o efeito de jogar sem critério e `greedy` o pior caso.
 `--check` valida win rate geral (35–65%) **e por arena** (30–70%); `--arena <id>` isola uma arena.
 
-Baseline atual (heuristic, 4000 lutas/par, seed 1): Assassino ≈55%, Mago ≈48%, Cavaleiro ≈46%.
-Por arena: coliseu 52/48/50 · lâminas 68/43/40 · arcana 52/48/50 · cripta 51/47/53 (ass/cav/mag).
+Baseline atual (heuristic, 4000 lutas/par, seed 1, 6 personagens): Bárbaro ≈63%, Mago ≈55%, Assassino ≈55%,
+Arqueiro ≈53%, Cavaleiro ≈38%, Clérigo ≈37%. Por arena, nenhum personagem sai de 32–68%
+(extremos: Mago 68% na Câmara Arcana; Clérigo 32% no Coliseu). Bárbaro, Cavaleiro e Clérigo estão perto dos limites
+de 35–65%: o próximo ajuste deve olhar para eles.
 
 **Lição de balanceamento:** com dano fixo e 100 de vida, há degraus (ex.: 33 de dano mágico mata em 4 golpes, 34 em 3).
 Um bônus de 5% já moveu o Mago de 50% a 71% contra o Cavaleiro. Ao mexer em números, rode `make sim` e

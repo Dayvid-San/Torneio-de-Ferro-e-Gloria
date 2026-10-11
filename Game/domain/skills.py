@@ -52,8 +52,8 @@ FURTIVE_STRIKE = Skill(
     cooldown=3, damage_action=ActionType.PHYSICAL, guaranteed_crit=True, ignore_defense=True)
 
 SHIELD_STANCE = Skill(
-    "Postura de Escudo", "Sem atacar, ganha +6 de defesa por 2 turnos do oponente.",
-    cooldown=3, self_effects=(Effect(EffectKind.DEFENSE_UP, 6, 2, "Escudo"),))
+    "Postura de Escudo", "Sem atacar, ganha +9 de defesa por 2 turnos do oponente.",
+    cooldown=3, self_effects=(Effect(EffectKind.DEFENSE_UP, 9, 2, "Escudo"),))
 
 TOXIC_BOLT = Skill(
     "Raio Tóxico", "Magia que envenena o alvo: 5 de dano por turno durante 3 turnos.",

@@ -148,3 +148,11 @@ def test_skill_button_and_hotkey_use_class_skill_then_enter_cooldown(game):
 def test_arena_and_tournament_arena_are_used_by_gameplay(game):
     start_tournament(game)
     assert game.scene.arena.id == game.tournament.current_arena
+
+
+def test_log_text_for_heal_at_full_hp_is_not_empty(game):
+    game.selected_character_id = "clerigo"
+    game.go_to("gameplay", opponent_id="barbaro", arena_id="coliseu")
+    game.step([pygame.event.Event(pygame.KEYDOWN, key=pygame.K_3)], DT)
+    assert game.scene.last_event.healed == 0  # vida cheia: nada a curar
+    run(game, 0.1)  # desenha o log sem erro
