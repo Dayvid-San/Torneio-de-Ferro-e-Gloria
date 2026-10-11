@@ -1,6 +1,7 @@
 import pygame
 
 from Game.config import GOLD, GREEN, GREY, RED, WHITE
+from Game.data.arenas import ARENAS
 from Game.data.characters import CHARACTERS
 from Game.scenes.base import Scene
 from Game.ui.button import Button
@@ -36,7 +37,7 @@ class ResultScene(Scene):
         lines = [f"Contra {CHARACTERS[opponent_id].name} em {turns} turnos"]
         if tour and not tour.is_over:
             nxt = CHARACTERS[tour.current_opponent].name
-            lines.append(f"Próximo adversário: {nxt}")
+            lines.append(f"Próximo adversário: {nxt} — {ARENAS[tour.current_arena].name}")
         elif tour:
             lines.append(f"Rodadas vencidas: {sum(tour.results)}/{tour.total_rounds}")
         self.lines = [self.small.render(t, True, WHITE) for t in lines]

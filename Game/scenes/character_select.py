@@ -1,6 +1,7 @@
 import pygame
 
 from Game.config import GREY, WHITE
+from Game.data.arenas import ARENAS
 from Game.data.characters import CHARACTERS
 from Game.scenes.base import Scene
 from Game.ui.button import Button
@@ -28,7 +29,7 @@ class CharacterSelectScene(Scene):
     def select(self, char_id: str) -> None:
         game = self.game
         game.selected_character_id = char_id
-        game.tournament = (Tournament(char_id, list(CHARACTERS), game.rng)
+        game.tournament = (Tournament(char_id, list(CHARACTERS), game.rng, list(ARENAS))
                            if game.mode == "torneio" else None)
         game.go_to("gameplay")
 
@@ -60,8 +61,11 @@ class CharacterSelectScene(Scene):
                  f"Def {f.physical_defense}/{f.magic_defense}  "
                  f"Crít {f.crit_chance:.0%}  Mana {f.max_mana} (Magia {f.cost(ActionType.MAGIC)})")
         gold = (255, 215, 0)
-        return (wrap_text(stats, self.small_font, gold, 400)
-                + wrap_text(c.lore, self.small_font, WHITE, 400))
+        skill = f.skill
+        skill_txt = f"Habilidade - {skill.name}: {skill.description}" if skill else ""
+        return (wrap_text(stats, self.small_font, gold, 420)
+                + wrap_text(skill_txt, self.small_font, (140, 220, 255), 420)
+                + wrap_text(c.lore, self.small_font, WHITE, 420))
 
     def _draw_text_box(self, screen, lines, x, y, padding=10):
         line_h = self.small_font.get_linesize()

@@ -37,9 +37,11 @@ def main(out="snapshots"):
     scene.draw(game.screen); shot("character_select")
 
     game.selected_character_id = "mago"
-    game.tournament = Tournament("mago", ["assassino", "cavaleiro", "mago"], game.rng)
+    game.tournament = Tournament("mago", ["assassino", "cavaleiro", "mago"], game.rng,
+                                 ["arcana", "lamina"])
     game.go_to("gameplay"); advance(game, 0.2); shot("gameplay_inicio")
-    game.scene.perform(ActionType.MAGIC); advance(game, 0.3); shot("gameplay_ataque")
+    game.scene.perform(ActionType.SKILL); advance(game, 0.3); shot("gameplay_habilidade")
+    advance(game, 3.5); shot("gameplay_estado")  # banner da arena já sumiu, status visíveis
 
     game.tournament.record(True)
     game.go_to("result", won=True, turns=7, opponent_id="cavaleiro")

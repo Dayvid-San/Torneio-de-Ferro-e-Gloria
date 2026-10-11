@@ -130,3 +130,21 @@ def test_escape_returns_to_menu(game):
     game.go_to("gameplay")
     game.step([pygame.event.Event(pygame.KEYDOWN, key=pygame.K_ESCAPE)], DT)
     assert type(game.scene).__name__ == "MenuScene"
+
+
+def test_skill_button_and_hotkey_use_class_skill_then_enter_cooldown(game):
+    game.selected_character_id = "assassino"
+    game.go_to("gameplay", arena_id="lamina")
+    scene = game.scene
+    run(game, 0.1)
+    assert scene.arena.id == "lamina" and "Golpe Furtivo" in scene._skill_label
+    game.step([pygame.event.Event(pygame.KEYDOWN, key=pygame.K_3)], DT)
+    assert scene.last_event.skill == "Golpe Furtivo" and scene.last_event.crit
+    run(game, 2.0)  # ação do jogador (0,8s) + do oponente (0,8s) e a vez volta
+    assert scene.phase == "input"
+    assert not scene.buttons[ActionType.SKILL].enabled and "(" in scene._skill_label
+
+
+def test_arena_and_tournament_arena_are_used_by_gameplay(game):
+    start_tournament(game)
+    assert game.scene.arena.id == game.tournament.current_arena

@@ -14,7 +14,7 @@ def test_player_acts_first_and_turns_alternate():
     e1 = b.act(ActionType.PHYSICAL)
     assert (e1.actor, e1.damage, e1.target_hp) == (Side.PLAYER, 29, 71)
     assert b.turn_side is Side.OPPONENT
-    e2 = b.act()  # policy: Mage usa magia
+    e2 = b.act(ActionType.MAGIC)
     assert (e2.actor, e2.action, e2.damage) == (Side.OPPONENT, ActionType.MAGIC, 33)
 
 

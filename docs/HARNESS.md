@@ -18,6 +18,13 @@ não frames. O harness cobre isso sem precisar de janela (`SDL_VIDEODRIVER=dummy
 3. UI → `make snapshot` e inspecionar as imagens.
 4. `make check` antes do commit.
 
-Baseline atual (random, 5000 lutas/par, seed 1): Assassino ≈53%, Mago ≈53%, Cavaleiro ≈45%.
-Com `--policy greedy` (IA que só maximiza dano líquido, ignorando mana) o Cavaleiro sobe a ≈73%:
-é um piso de pior caso, não o jogo real; observe-o ao mexer em defesa/mana, mas o gate usa `random`.
+`python -m tools.simulate` usa por padrão a policy `heuristic` (jogo razoável, sem erros aleatórios), que é a
+medida de balanceamento que importa; `random` mostra o efeito de jogar sem critério e `greedy` o pior caso.
+`--check` valida win rate geral (35–65%) **e por arena** (30–70%); `--arena <id>` isola uma arena.
+
+Baseline atual (heuristic, 4000 lutas/par, seed 1): Assassino ≈55%, Mago ≈48%, Cavaleiro ≈46%.
+Por arena: coliseu 52/48/50 · lâminas 68/43/40 · arcana 52/48/50 · cripta 51/47/53 (ass/cav/mag).
+
+**Lição de balanceamento:** com dano fixo e 100 de vida, há degraus (ex.: 33 de dano mágico mata em 4 golpes, 34 em 3).
+Um bônus de 5% já moveu o Mago de 50% a 71% contra o Cavaleiro. Ao mexer em números, rode `make sim` e
+`--arena` para cada arena, não só o geral. Câmara Arcana está propositalmente sutil (+3% magia, +5 mana) por causa disso.

@@ -14,11 +14,14 @@ Game/
   domain/            REGRAS (puro Python, sem pygame)
     fighter.py       Fighter (HP, ataque, defesa, crítico, mana) + Assassin/Knight/Mage
     battle.py        Battle: máquina de estados de turnos, histórico de BattleEvent
+    skills.py        Skill (declarativa): custo, cooldown, dano, efeitos; 1 por classe
+    effects.py       Effect/ActiveEffect (DEFENSE_UP, POISON)
+    arena.py         Arena: multiplicadores de dano, bônus de crítico e de mana
     damage.py        calculate_damage (poder x crítico -> modificadores -> defesa) + DamageModifier
     ai.py            Policy: RandomPolicy, GreedyPolicy
     tournament.py    Tournament: chaveamento de eliminação (jogador vs. todos os demais)
     actions.py       ActionType, Side
-  data/characters.py CharacterDef: conteúdo (nome, lore, sprites) separado da lógica
+  data/              characters.py (lore, sprites) e arenas.py (catálogo de cenários)
   audio.py           música e efeitos (no-op se não houver dispositivo/arquivo)
   scenes/            menu, character_select, gameplay, result (registro por nome)
   ui/                Button, Animation (por dt), texto, barra de vida
@@ -32,9 +35,9 @@ tests/ tools/        harness (ver HARNESS.md)
 ## Pontos de extensão do roadmap
 | Item do README | Onde entra |
 |---|---|
-| Arenas com bônus/penalidades | `DamageModifier` passados a `Battle` + dados de arena em `data/` |
+| Arenas com bônus/penalidades | ✅ `Arena` em `data/arenas.py` (novas arenas = nova entrada) |
 | Eventos aleatórios por rodada | hook por turno em `Battle` + `rng` injetado |
-| Habilidades/passivas | novos `ActionType` / métodos em `Fighter` |
+| Habilidades | ✅ `Skill` declarativa; passivas ainda não |
 | Torneio e ranking | novo pacote `domain/tournament.py` (chaveamento de `Battle`s) + cena `tournament` |
 | Save/progressão | `domain` serializável + `utils/save.py` |
 
@@ -57,3 +60,18 @@ Menu → **Torneio** (rodadas contra cada outro lutador; derrota elimina) ou **D
 → seleção (hover mostra atributos) → luta → resultado (próxima luta / revanche / novo torneio / menu).
 Controles: mouse ou `1`/`F` físico, `2` magia (na luta); `Enter`/`Espaço` confirma no resultado;
 `Esc` volta; `M` liga/desliga o som.
+
+## Habilidades, status e arenas
+- **Habilidade** (`ActionType.SKILL`, tecla `3`): uma por classe, declarada em `domain/skills.py`. `Battle` aplica
+  qualquer combinação de dano / crítico garantido / ignorar defesa / efeitos em si / efeitos no alvo, então uma
+  skill nova não exige código de combate. Tem cooldown (turnos próprios) e pode custar mana.
+  - Assassino — *Golpe Furtivo*: físico, crítico garantido, ignora defesa; cooldown 3.
+  - Cavaleiro — *Postura de Escudo*: sem dano, +6 de defesa por 2 turnos do oponente; cooldown 3.
+  - Mago — *Raio Tóxico*: magia a 60% do poder + veneno (5/turno, 3 turnos do portador); 10 mana; cooldown 3.
+- **Efeitos de status**: ao fim do turno do portador aplica-se veneno (ignora defesa; pode matar), reduz-se cooldown
+  e duração. Reaplicar o mesmo efeito renova.
+- **Arenas** (`Arena`): multiplicador de dano físico/mágico, bônus de crítico, bônus de regeneração de mana e um tom
+  de cor sobre o fundo (não há arte própria por arena ainda). No torneio cada rodada tem uma arena (sem repetir
+  até esgotar); no duelo é sorteada. O banner de abertura mostra nome, descrição e efeitos.
+- **IA do oponente** (`HeuristicPolicy`): usa skill de dano sempre que disponível, escudo com vida baixa, poupa
+  mana e erra de propósito 25% das vezes (`randomness`).

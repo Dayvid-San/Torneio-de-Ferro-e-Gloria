@@ -12,7 +12,11 @@ class Button:
         self.hovered = False
         self.pressed = False
         self.enabled = True
+        self.text_color = text_color
         self._label = font.render(text, True, text_color)
+
+    def set_text(self, text, font) -> None:
+        self._label = font.render(text, True, self.text_color)
 
     def update_hover(self, mouse_pos) -> None:
         self.hovered = self.enabled and self.rect.collidepoint(mouse_pos)

@@ -14,7 +14,9 @@ e olhe `snapshots/*.png`.
 
 ## Onde mexer
 - Novo personagem: subclasse de `Fighter` + entrada em `Game/data/characters.py` (+ sprites em `public/moveChar`, convenção `right_<slug>_<idle|ataque_fisico|magico>_<1|2>.png`). Testes de assets cobrem.
-- Modificador de dano (arena/evento/passiva): função em `Battle(modifiers=...)`.
+- Nova habilidade: `Skill` em `domain/skills.py` + `SKILL = ...` na subclasse de `Fighter` (nenhum código de combate novo se couber nos campos de `Skill`; efeito inédito = novo `EffectKind` em `effects.py` e tratá-lo em `Fighter`).
+- Nova arena: entrada em `Game/data/arenas.py`; rode `python -m tools.simulate --arena <id> --check`.
+- Modificador de dano (evento/passiva): função em `Battle(modifiers=...)`.
 - Nova IA: classe com `choose(battle, side)` em `domain/ai.py`.
 - Nova cena: arquivo em `Game/scenes/`, registrar em `Game/scenes/__init__.py`, navegar com `game.go_to("nome")`.
 - Constantes/tempos: `Game/config.py`. Imagens/fontes: sempre via `game.assets` (cache + fallback).

@@ -11,23 +11,29 @@ import random
 import sys
 from itertools import product
 
+from Game.data.arenas import ARENAS
 from Game.data.characters import CHARACTERS
 from Game.domain.actions import ActionType, Side
-from Game.domain.ai import GreedyPolicy, RandomPolicy
+from Game.domain.ai import GreedyPolicy, HeuristicPolicy, RandomPolicy
+from Game.domain.arena import NEUTRAL_ARENA
 from Game.domain.battle import Battle
 
-POLICIES = {"random": lambda rng: RandomPolicy(rng), "greedy": lambda rng: GreedyPolicy()}
+POLICIES = {"random": lambda rng: RandomPolicy(rng),
+            "greedy": lambda rng: GreedyPolicy(),
+            "heuristic": lambda rng: HeuristicPolicy(rng, randomness=0.0)}
 
 
-def fight(a_id, b_id, rng, policy_name, first=Side.PLAYER):
+def fight(a_id, b_id, rng, policy_name, first=Side.PLAYER, arena_id=None):
     battle = Battle(CHARACTERS[a_id].create(), CHARACTERS[b_id].create(), first=first,
-                    policy=POLICIES[policy_name](rng), rng=rng)
+                    policy=POLICIES[policy_name](rng), rng=rng,
+                    arena=ARENAS[arena_id] if arena_id else NEUTRAL_ARENA)
     while not battle.is_over:
         battle.act()  # ambos usam a mesma policy: mede o poder do personagem
     return battle.winner, battle.turn_number - 1
 
 
-def simulate(fights, seed, policy_name):
+def simulate(fights, seed, policy_name, arena_id=None):
+    """arena_id=None sorteia uma arena por luta; 'all' é sinônimo."""
     rng = random.Random(seed)
     wins = {c: 0 for c in CHARACTERS}
     played = {c: 0 for c in CHARACTERS}
@@ -38,7 +44,8 @@ def simulate(fights, seed, policy_name):
         w = 0
         for i in range(fights):
             first = Side.PLAYER if i % 2 == 0 else Side.OPPONENT  # remove viés de iniciativa
-            winner, n = fight(a, b, rng, policy_name, first)
+            arena = arena_id if arena_id not in (None, "all") else rng.choice(list(ARENAS))
+            winner, n = fight(a, b, rng, policy_name, first, arena)
             w += winner is Side.PLAYER
             turns.append(n)
         matrix[(a, b)] = w / fights
@@ -54,14 +61,17 @@ def main(argv=None):
     p = argparse.ArgumentParser()
     p.add_argument("--fights", type=int, default=2000)
     p.add_argument("--seed", type=int, default=1)
-    p.add_argument("--policy", choices=POLICIES, default="random")
+    p.add_argument("--policy", choices=POLICIES, default="heuristic")
+    p.add_argument("--arena", choices=["all", *ARENAS], default="all")
     p.add_argument("--check", action="store_true")
     p.add_argument("--min", type=float, default=0.35, help="win rate mínima aceitável")
     p.add_argument("--max", type=float, default=0.65, help="win rate máxima aceitável")
+    p.add_argument("--arena-min", type=float, default=0.30, help="mínima por arena (--check)")
+    p.add_argument("--arena-max", type=float, default=0.70, help="máxima por arena (--check)")
     args = p.parse_args(argv)
 
-    rates, matrix, avg_turns = simulate(args.fights, args.seed, args.policy)
-    print(f"policy={args.policy} fights/par={args.fights} seed={args.seed} "
+    rates, matrix, avg_turns = simulate(args.fights, args.seed, args.policy, args.arena)
+    print(f"policy={args.policy} arena={args.arena} fights/par={args.fights} seed={args.seed} "
           f"turnos médios={avg_turns:.1f}\n")
     ids = list(CHARACTERS)
     print(f"{'(linha vence coluna)':<22}" + "".join(f"{c:>11}" for c in ids))
@@ -75,6 +85,13 @@ def main(argv=None):
         print(f"  {c:<12}{r:>6.1%}{flag}")
         if flag:
             bad.append(c)
+    if args.check and args.arena == "all":  # cada arena também precisa ser jogável
+        for arena_id, arena in ARENAS.items():
+            arena_rates, _, _ = simulate(args.fights, args.seed, args.policy, arena_id)
+            line = " ".join(f"{c}={r:.0%}" for c, r in arena_rates.items())
+            off = [c for c, r in arena_rates.items() if not args.arena_min <= r <= args.arena_max]
+            print(f"  arena {arena_id:<10}{line}{'  <-- DESBALANCEADA' if off else ''}")
+            bad += [f"{arena_id}:{c}" for c in off]
     return 1 if (args.check and bad) else 0
 
 

@@ -2,9 +2,10 @@ import pygame
 
 from Game import config
 from Game.config import GREEN, GREY, RED, WHITE
+from Game.data.arenas import ARENAS
 from Game.data.characters import CHARACTERS, SPRITE_KIND, CharacterDef
 from Game.domain.actions import ActionType, Side
-from Game.domain.ai import RandomPolicy
+from Game.domain.ai import HeuristicPolicy
 from Game.domain.battle import Battle, BattleEvent
 from Game.scenes.base import Scene
 from Game.ui.animation import Animation
@@ -19,7 +20,7 @@ class GameplayScene(Scene):
     mostrar; todas as regras vivem em Game.domain."""
 
     def __init__(self, game, player_id: str | None = None, opponent_id: str | None = None,
-                 battle: Battle | None = None):
+                 arena_id: str | None = None, battle: Battle | None = None):
         super().__init__(game)
         assets = game.assets
         player_id = player_id or game.selected_character_id or "assassino"
@@ -28,26 +29,36 @@ class GameplayScene(Scene):
             opponent_id = tournament.current_opponent
         if opponent_id is None:
             opponent_id = game.rng.choice([c for c in CHARACTERS if c != player_id])
+        if arena_id is None:
+            arena_id = (tournament.current_arena if tournament else None) or game.rng.choice(list(ARENAS))
+        self.arena = ARENAS[arena_id]
         self.defs: dict[Side, CharacterDef] = {
             Side.PLAYER: CHARACTERS[player_id], Side.OPPONENT: CHARACTERS[opponent_id]}
         self.battle = battle or Battle(
             self.defs[Side.PLAYER].create(), self.defs[Side.OPPONENT].create(),
-            policy=RandomPolicy(game.rng))
+            policy=HeuristicPolicy(game.rng), rng=game.rng, arena=self.arena)
 
         self.font = assets.font(40)
         self.background = assets.image("public/fundo.jpeg", game.screen.get_size(), alpha=False)
         w, h = game.screen.get_size()
         self.width, self.height = w, h
-        cost = self.battle.fighter(Side.PLAYER).cost(ActionType.MAGIC)
-        self.buttons = {
-            ActionType.PHYSICAL: Button(w // 3 - 90, h - 100, 180, 50, "Físico [1]", self.font),
-            ActionType.MAGIC: Button(2 * w // 3 - 90, h - 100, 180, 50,
-                                     f"Magia [2] -{cost}", self.font),
-        }
-        self.hotkeys = {pygame.K_1: ActionType.PHYSICAL, pygame.K_f: ActionType.PHYSICAL,
-                        pygame.K_2: ActionType.MAGIC}
-        self.floaters: list[dict] = []  # números de dano flutuantes
         self.small_font = assets.font(30)
+        self.tiny_font = assets.font(24)
+        me = self.battle.fighter(Side.PLAYER)
+        self.button_font = assets.font(30)
+        self.buttons = {
+            ActionType.PHYSICAL: Button(20, h - 90, 240, 50, "Físico [1]", self.button_font),
+            ActionType.MAGIC: Button(280, h - 90, 240, 50,
+                                     f"Magia [2] -{me.cost(ActionType.MAGIC)}", self.button_font),
+            ActionType.SKILL: Button(540, h - 90, 240, 50, "", self.button_font),
+        }
+        self._skill_label = None
+        self.hotkeys = {pygame.K_1: ActionType.PHYSICAL, pygame.K_f: ActionType.PHYSICAL,
+                        pygame.K_2: ActionType.MAGIC, pygame.K_3: ActionType.SKILL}
+        self.tint = pygame.Surface((w, h), pygame.SRCALPHA)
+        self.tint.fill(self.arena.tint)
+        self.banner_time = 3.0
+        self.floaters: list[dict] = []  # números de dano flutuantes
         self.round_label = (f"Rodada {tournament.round_number}/{tournament.total_rounds}"
                             if tournament else "Duelo Rápido")
         self.animations = {side: self._animation(side, "idle") for side in Side}
@@ -74,15 +85,39 @@ class GameplayScene(Scene):
     def perform(self, action: ActionType | None = None) -> None:
         event = self.battle.act(action)
         self.last_event = event
-        kind = "physical" if event.action is ActionType.PHYSICAL else "magic"
+        skill = self.battle.fighter(event.actor).skill if event.skill else None
+        physical = (event.action is ActionType.PHYSICAL
+                    or (skill is not None and skill.damage_action is ActionType.PHYSICAL))
+        kind = "physical" if physical else "magic"
         self.animations[event.actor] = self._animation(event.actor, kind)
         self.game.audio.play("attack")
         self.game.audio.play("hit")
         x = self._x(event.target) + 100
         text = f"{event.damage}!" if event.crit else str(event.damage)
-        self.floaters.append({"text": text, "x": x, "y": self.height // 2 - 90, "age": 0.0,
-                              "color": (255, 215, 0) if event.crit else WHITE})
+        if event.damage or event.action is not ActionType.SKILL:
+            self.floaters.append({"text": text, "x": x, "y": self.height // 2 - 90, "age": 0.0,
+                                  "color": (255, 215, 0) if event.crit else WHITE})
+        if event.self_damage:
+            self.floaters.append({"text": f"-{event.self_damage}", "x": self._x(event.actor) + 100,
+                                  "y": self.height // 2 - 90, "age": 0.0, "color": (120, 220, 80)})
         self.phase, self.timer = ACTING, config.ACTION_DELAY
+
+    def _refresh_skill_button(self) -> None:
+        me = self.battle.fighter(Side.PLAYER)
+        skill = me.skill
+        if skill is None:
+            self.buttons[ActionType.SKILL].enabled = False
+            return
+        if me.skill_cooldown:
+            suffix = f" ({me.skill_cooldown}t)"
+        elif skill.mana_cost:
+            suffix = f" -{skill.mana_cost}"
+        else:
+            suffix = ""
+        label = f"{skill.name} [3]{suffix}"
+        if label != self._skill_label:
+            self._skill_label = label
+            self.buttons[ActionType.SKILL].set_text(label, self.button_font)
 
     def _x(self, side: Side) -> int:
         return self.width // 4 - 100 if side is Side.PLAYER else 3 * self.width // 4 - 100
@@ -107,6 +142,8 @@ class GameplayScene(Scene):
     def update(self, dt):
         for anim in self.animations.values():
             anim.update(dt)
+        self.banner_time = max(0.0, self.banner_time - dt)
+        self._refresh_skill_button()
         for f in self.floaters:
             f["age"] += dt
         self.floaters = [f for f in self.floaters if f["age"] < 1.0]
@@ -143,12 +180,17 @@ class GameplayScene(Scene):
 
     def draw(self, screen):
         screen.blit(self.background, (0, 0))
+        screen.blit(self.tint, (0, 0))
         y = self.height // 2
         xs = {Side.PLAYER: self.width // 4 - 100, Side.OPPONENT: 3 * self.width // 4 - 100}
         for side in Side:
             fighter = self.battle.fighter(side)
             screen.blit(self.animations[side].frame, (xs[side], y))
             screen.blit(self.font.render(self._name(side), True, WHITE), (xs[side], y - 85))
+            tags = "  ".join(e.label for e in fighter.effects)
+            if tags:
+                screen.blit(self.tiny_font.render(tags, True, (255, 215, 120)),
+                            (xs[side], y - 10))
             draw_health_bar(screen, xs[side], y - 50, fighter.hp, fighter.max_hp)
             draw_mana_bar(screen, xs[side], y - 26, fighter.mana, fighter.max_mana)
 
@@ -159,6 +201,13 @@ class GameplayScene(Scene):
             label = self.font.render(f["text"], True, f["color"])
             screen.blit(label, label.get_rect(center=(f["x"], f["y"] - int(60 * f["age"]))))
         screen.blit(self.small_font.render(self.round_label, True, WHITE), (10, 10))
+        arena = self.small_font.render(f"{self.arena.name}", True, WHITE)
+        screen.blit(arena, arena.get_rect(topright=(self.width - 10, 10)))
+        if self.banner_time > 0:
+            for i, text in enumerate((self.arena.name, self.arena.description,
+                                      f"Efeitos: {self.arena.effects_summary}")):
+                line = (self.font if i == 0 else self.tiny_font).render(text, True, (255, 215, 120))
+                screen.blit(line, line.get_rect(center=(self.width // 2, 150 + i * 30)))
 
         color = WHITE
         if self.battle.is_over:
@@ -168,7 +217,10 @@ class GameplayScene(Scene):
         if self.last_event:
             e = self.last_event
             crit = " CRÍTICO!" if e.crit else ""
-            log = self.font.render(
-                f"{self._name(e.actor)}: {e.action.label}, {e.damage} de dano{crit}",
+            what = e.skill or e.action.label
+            result = f"{e.damage} de dano" if e.damage else ", ".join(e.effects)
+            poison = f"  (veneno -{e.self_damage})" if e.self_damage else ""
+            log = self.small_font.render(
+                f"{self._name(e.actor)}: {what}, {result}{crit}{poison}",
                 True, (255, 215, 0) if e.crit else GREY)
             screen.blit(log, log.get_rect(center=(self.width // 2, 100)))
